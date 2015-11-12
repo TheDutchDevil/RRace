@@ -212,7 +212,7 @@ public class RobotRace extends Base {
         if (gs.showAxes) {
             drawAxisFrame();
         }
-        
+               
         // Get the position and direction of the first robot.
         robots[0].position = raceTracks[gs.trackNr].getLanePoint(0, 0);
         robots[0].direction = raceTracks[gs.trackNr].getLaneTangent(0, 0);
@@ -267,7 +267,7 @@ public class RobotRace extends Base {
         gl.glColor3f(0f, 1f, 0f);
         // rotat to y-as
         gl.glPushMatrix();
-        gl.glRotatef(90f, 1f, 0f, 0f);
+        gl.glRotatef(-90f, 1f, 0f, 0f);
         gl.glTranslatef(0f, 0f, 0.25f);
         gl.glScalef(0.1f, 0.1f, 1f);
         glut.glutSolidCube(0.5f);
