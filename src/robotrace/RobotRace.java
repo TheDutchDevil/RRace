@@ -247,7 +247,47 @@ public class RobotRace extends Base {
      * and origin (yellow).
      */
     public void drawAxisFrame() {
-        // code goes here ...
+        // set color to yellow
+        gl.glColor3f(1f, 1f, 0f);
+        glut.glutSolidSphere(0.1, 30, 30);
+        // red arrow on x as
+        // set color to red
+        gl.glPushMatrix();
+        gl.glColor3f(1f, 0f, 0f);
+        // rotat to x-as
+        gl.glRotatef(90f, 0f, 1f, 0f);
+        gl.glTranslatef(0f, 0f, 0.25f);
+        gl.glScalef(0.1f, 0.1f, 1f);
+        glut.glutSolidCube(0.5f);
+        gl.glTranslatef(0f, 0f, 0.25f);
+        glut.glutSolidCone(0.6, 0.5, 30, 30);
+        gl.glPopMatrix();
+        // green arrow on the y-as
+        // set color to green
+        gl.glColor3f(0f, 1f, 0f);
+        // rotat to y-as
+        gl.glPushMatrix();
+        gl.glRotatef(90f, 1f, 0f, 0f);
+        gl.glTranslatef(0f, 0f, 0.25f);
+        gl.glScalef(0.1f, 0.1f, 1f);
+        glut.glutSolidCube(0.5f);
+        gl.glTranslatef(0f, 0f, 0.25f);
+        glut.glutSolidCone(0.6, 0.5, 30, 30);
+        gl.glPopMatrix();
+        // gl.glLoadIdentity();
+        // bluw arrow on the z-as
+        // set color to blue
+        gl.glColor3f(0f, 0f, 1f);
+        // rotat to y-as
+        gl.glPushMatrix();
+        //gl.glRotatef(90f, 1f, 0f, 0f);
+        gl.glTranslatef(0f, 0f, 0.25f);
+        gl.glScalef(0.1f, 0.1f, 1f);
+        glut.glutSolidCube(0.5f);
+        gl.glTranslatef(0f, 0f, 0.25f);
+        glut.glutSolidCone(0.6, 0.5, 30, 30);
+        gl.glPopMatrix();
+        
     }
  
     /**
