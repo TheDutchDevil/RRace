@@ -159,6 +159,15 @@ public class RobotRace extends Base {
         brick = loadTexture("brick.jpg");
         head = loadTexture("head.jpg");
         torso = loadTexture("torso.jpg");
+        
+        /**
+         * Initials values for theta, phi and vDist so that the eye is placed 
+         * to look directly into the scene. 
+         */
+        gs.theta = (float)Math.PI / 4f;
+        gs.phi = (float)Math.PI / 3f;
+        
+        gs.vDist = 7;
     }
     
     /**
@@ -173,9 +182,13 @@ public class RobotRace extends Base {
         gl.glMatrixMode(GL_PROJECTION);
         gl.glLoadIdentity();
 
-        // Set the perspective.
-        // Modify this to meet the requirements in the assignment.
-        glu.gluPerspective(40, (float)gs.w / (float)gs.h, 0.1, 100);
+        /**
+        * Specifies a viewing frustrum based on a viewing angle in the y 
+        * direction, aspect ratio and a near and far clipping plane. Values for
+        * the near and far clipping plane (Last two parameters) are based on the
+        * values mentioned in the assignment document. 
+        */
+        glu.gluPerspective(40, (float)gs.w / (float)gs.h, 0.1 * gs.vDist, 10*gs.vDist);
         
         // Set camera.
         gl.glMatrixMode(GL_MODELVIEW);
