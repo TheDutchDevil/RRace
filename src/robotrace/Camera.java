@@ -72,23 +72,17 @@ class Camera {
      * @param gs instance of the GlobalState object which provides the theta,
      * phi and vDist variables. 
      */
-    private void setDefaultMode(GlobalState gs) {  
+    private void setDefaultMode(GlobalState gs) { 
         
         this.eye.x = gs.vDist * (float)Math.cos(gs.theta) * 
-                (float)Math.sin(gs.phi);
+                (float)Math.sin(Math.PI /2 - gs.phi);
         
         this.eye.y = gs.vDist * (float)Math.sin(gs.theta) * 
-                (float)Math.sin(gs.phi);
+                (float)Math.sin(Math.PI /2 - gs.phi);
         
-        this.eye.z = gs.vDist * (float)Math.cos(gs.phi);
+        this.eye.z = gs.vDist * (float)Math.cos(Math.PI/2 - gs.phi);
         
         this.center = gs.cnt;
-        
-        if(gs.phi < 0) {
-            this.up.z = -1;
-        } else {
-            this.up.z = 1;
-        }
     }
 
     /**
