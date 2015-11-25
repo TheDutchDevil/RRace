@@ -56,31 +56,30 @@ class Camera {
      * gs.phi and gs.vDist (Which is the distance between the eye point and
      * the center point: gs.cnt).</p>
      * 
-     * <p>the x is calculated by the formula: r*cos(theta)*sin(phi)
-     * the y is calculated by y = r*sin(theta)*cos(phi)
-     * The z is calculated by z = r*cos(phi)</p>
+     * <p>Where gs.vDist is the radius (r). Let V be a vector between the center
+     * point and the eye point. theta is the angle between V projected on the 
+     * XY-plane and the positive X-axis. Phi is the angle between V and the 
+     * XY-plane. To use phi in the calculation for the coordinates of the eye 
+     * point it has to be inverted, so that is the angle between V and the Z
+     * axis.</p>
      * 
-     * <p>Where r is the gs.vDist, suppose that V is a vector between the center
-     * point and the eye point then theta is the angle between V projected on 
-     * the XY-plane and the positive X-axis and phi is the angle between V and
-     * the XY plane.</p>
-     * 
-     * <p>To prevent that the camera flips upside down when phi switches sign 
-     * the camera's up vector is also flipped upside down. So that there is 
-     * no camera flip when the camera rotates over the top of the scene.</p>
+     * <p> the x is calculated by the formula: r*cos(theta)*sin(invertedPhi)
+     * the y is calculated by y = r*sin(theta)*cos(invertedPhi)
+     * The z is calculated by z = r*cos(invertedPhi)</p>
      * 
      * @param gs instance of the GlobalState object which provides the theta,
      * phi and vDist variables. 
      */
     private void setDefaultMode(GlobalState gs) { 
+        double invertedPhi = Math.PI /2 - gs.phi;
         
         this.eye.x = gs.vDist * (float)Math.cos(gs.theta) * 
-                (float)Math.sin(Math.PI /2 - gs.phi);
+                (float)Math.sin(invertedPhi);
         
         this.eye.y = gs.vDist * (float)Math.sin(gs.theta) * 
-                (float)Math.sin(Math.PI /2 - gs.phi);
+                (float)Math.sin(invertedPhi);
         
-        this.eye.z = gs.vDist * (float)Math.cos(Math.PI/2 - gs.phi);
+        this.eye.z = gs.vDist * (float)Math.cos(invertedPhi);
         
         this.center = gs.cnt;
     }
