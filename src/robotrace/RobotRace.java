@@ -186,7 +186,6 @@ public class RobotRace extends Base {
     @Override
     public void drawScene() {
         
-        gs.showStick = true;
         // Background color.
         gl.glClearColor(1f, 1f, 1f, 0f);
 
