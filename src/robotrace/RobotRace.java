@@ -1,7 +1,12 @@
 package robotrace;
 
+import java.nio.FloatBuffer;
 import javax.media.opengl.GL;
 import static javax.media.opengl.GL2.*;
+import static javax.media.opengl.fixedfunc.GLLightingFunc.GL_AMBIENT;
+import static javax.media.opengl.fixedfunc.GLLightingFunc.GL_DIFFUSE;
+import static javax.media.opengl.fixedfunc.GLLightingFunc.GL_LIGHT0;
+import static javax.media.opengl.fixedfunc.GLLightingFunc.GL_SPECULAR;
 
 /**
  * Handles all of the RobotRace graphics functionality, which should be extended
@@ -66,20 +71,16 @@ public class RobotRace extends Base {
         robots = new Robot[4];
 
         // Initialize robot 0
-        robots[0] = new Robot(Material.GOLD
-        /* add other parameters that characterize this robot */);
+        robots[0] = new Robot(Material.WOOD, new Vector(-2, 0, 0));
 
         // Initialize robot 1
-        robots[1] = new Robot(Material.SILVER
-        /* add other parameters that characterize this robot */);
+        robots[1] = new Robot(Material.SILVER, new Vector(-1, 0, 0));
 
         // Initialize robot 2
-        robots[2] = new Robot(Material.WOOD
-        /* add other parameters that characterize this robot */);
+        robots[2] = new Robot(Material.GOLD, new Vector(1, 0, 0));
 
         // Initialize robot 3
-        robots[3] = new Robot(Material.ORANGE
-        /* add other parameters that characterize this robot */);
+        robots[3] = new Robot(Material.ORANGE, new Vector(2, 0, 0));
 
         // Initialize the camera
         camera = new Camera();
@@ -127,6 +128,19 @@ public class RobotRace extends Base {
         // Normalize normals.
         gl.glEnable(GL_NORMALIZE);
 
+        /**
+         * Enables lighting, by enabling a single light source and setting
+         * diffuse, ambient and specular color values. Values less than 1 are
+         * used to make the light less intense.
+         */
+        gl.glEnable(GL_LIGHTING);
+        gl.glEnable(GL_LIGHT0);
+        gl.glEnable(GL_COLOR_MATERIAL);
+
+        gl.glLightfv(GL_LIGHT0, GL_AMBIENT, new float[]{.2f, .2f, .2f, 1f}, 0);
+        gl.glLightfv(GL_LIGHT0, GL_DIFFUSE, new float[]{.7f, .7f, .7f, 1f}, 0);
+        gl.glLightfv(GL_LIGHT0, GL_SPECULAR, new float[]{.7f, .7f, .7f}, 0);
+
         // Enable textures. 
         gl.glEnable(GL_TEXTURE_2D);
         gl.glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
@@ -137,6 +151,13 @@ public class RobotRace extends Base {
         brick = loadTexture("brick.jpg");
         head = loadTexture("head.jpg");
         torso = loadTexture("torso.jpg");
+
+        /**
+         * Sets the shade model to smooth. See
+         * https://www.opengl.org/sdk/docs/man2/xhtml/glShadeModel.xml for the
+         * effects of a smooth shade model.
+         */
+        gl.glShadeModel(GL_SMOOTH);
 
         /**
          * Initials values for theta, phi and vDist so that the eye is placed to
@@ -178,6 +199,23 @@ public class RobotRace extends Base {
         glu.gluLookAt(camera.eye.x(), camera.eye.y(), camera.eye.z(),
                 camera.center.x(), camera.center.y(), camera.center.z(),
                 camera.up.x(), camera.up.y(), camera.up.z());
+
+        /**
+         * Calculates the position of the point, using the theta and phi of the
+         * camera and modifying them by ten degrees. Radius is arbritrary
+         * because the light source is directional.
+         */
+        double tenDegreesInRad = (10d * Math.PI) / 180d;
+
+        Vector lightPosition = sphericalToCoords(gs.theta - tenDegreesInRad, Math.PI / 2 - (gs.phi + tenDegreesInRad), 1);
+
+        /**
+         * Position of the light source, the last field is set to zero so that
+         * the light source is directional (comes from infinity).
+         */
+        float[] lightPos = {(float) lightPosition.x, (float) lightPosition.y, (float) lightPosition.z, 0f};
+
+        gl.glLightfv(GL_LIGHT0, GL_POSITION, lightPos, 0);
     }
 
     /**
@@ -185,7 +223,7 @@ public class RobotRace extends Base {
      */
     @Override
     public void drawScene() {
-        
+
         // Background color.
         gl.glClearColor(1f, 1f, 1f, 0f);
 
@@ -206,11 +244,13 @@ public class RobotRace extends Base {
         }
 
         // Get the position and direction of the first robot.
-        robots[0].position = raceTracks[gs.trackNr].getLanePoint(0, 0);
-        robots[0].direction = raceTracks[gs.trackNr].getLaneTangent(0, 0);
-
-        // Draw the first robot.
+        //robots[0].position = raceTracks[gs.trackNr].getLanePoint(0, 0);
+        //robots[0].direction = raceTracks[gs.trackNr].getLaneTangent(0, 0);
+        // Draw all robots.
         robots[0].draw(gl, glu, glut, gs.showStick, gs.tAnim);
+        robots[1].draw(gl, glu, glut, gs.showStick, gs.tAnim);
+        robots[2].draw(gl, glu, glut, gs.showStick, gs.tAnim);
+        robots[3].draw(gl, glu, glut, gs.showStick, gs.tAnim);
 
         // Draw the race track.
         raceTracks[gs.trackNr].draw(gl, glu, glut);
@@ -296,5 +336,29 @@ public class RobotRace extends Base {
     public static void main(String args[]) {
         RobotRace robotRace = new RobotRace();
         robotRace.run();
+    }
+
+    /**
+     * Converts coordinates from a spherical coordinate system to xyz
+     * coordinates.
+     *
+     * @param theta The angle between the point projected on the XY plane and
+     * positive X-axis.
+     * @param phi The angle between the point and the positive Z-axis.
+     * @param radius The distance of the origin to the point.
+     * @return Returns a vector containing the xyz coordinates.
+     */
+    public static Vector sphericalToCoords(double theta, double phi, double radius) {
+        Vector ret = new Vector(0, 0, 0);
+
+        ret.x = radius * (float) Math.cos(theta)
+                * (float) Math.sin(phi);
+
+        ret.y = radius * (float) Math.sin(theta)
+                * (float) Math.sin(phi);
+
+        ret.z = radius * (float) Math.cos(phi);
+
+        return ret;
     }
 }

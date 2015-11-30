@@ -1,7 +1,9 @@
 package robotrace;
 
 import com.jogamp.opengl.util.gl2.GLUT;
+import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
+import javax.media.opengl.fixedfunc.GLLightingFunc;
 import javax.media.opengl.glu.GLU;
 import jogamp.graph.curve.tess.HEdge;
 
@@ -17,6 +19,21 @@ class Robot {
      * are based on this value.
      */
     private static final double SIZE = 2;
+
+    /**
+     * Skin like color (between red and yellow) for the limbs and ears.
+     */
+    private static final float[] LIMB_COLOR = {254f / 255f, 179f / 255f, 129f / 255f};
+
+    /**
+     * Dark black like color used in the soles of the shoes.
+     */
+    private static final float[] SOLE_COLOR = {50f / 255f, 50f / 255f, 50f / 255f};
+
+    /**
+     * Metallic like color used in the head of the robot.
+     */
+    private static final float[] ROBOT_HEAD_COLOR = {160f / 255f, 160f / 255f, 160f / 255f};
 
     /**
      * Radius of a joint of the stick figure skeleton.
@@ -122,30 +139,30 @@ class Robot {
      * Width of the robot ankle.
      */
     private static final double ANKLE_WIDTH = .0175 * SIZE;
-    
+
     /**
      * Height of the torso. That is from the shoulders to the hip.
      */
     private static final double TORSO_HEIGHT = .35 * SIZE;
-    
+
     /**
-     * Height of the top of the robot shoulders, which is slightly above the 
-     * shoulder joints. 
+     * Height of the top of the robot shoulders, which is slightly above the
+     * shoulder joints.
      */
     private static final double SHOULDER_HEIGHT = SHOULDER_JOINT_HEIGHT + .025 * SIZE;
-    
+
     /**
      * Width at the top of the torso.
      */
     private static final double UPPER_TORSO_WIDTH = 0.1 * SIZE;
-    
+
     /**
      * Width at the bottom of the torso.
      */
     private static final double LOWER_TORSO_WIDTH = 0.2 * SIZE;
-    
+
     /**
-     * Length of the robot neck. 
+     * Length of the robot neck.
      */
     private static final double NECK_LENGTH = .05 * SIZE;
 
@@ -172,9 +189,9 @@ class Robot {
     /**
      * Constructs the robot with initial parameters.
      */
-    public Robot(Material material
-    /* add other parameters that characterize this robot */) {
+    public Robot(Material material, Vector pos) {
         this.material = material;
+        this.position = pos;
     }
 
     /**
@@ -187,30 +204,32 @@ class Robot {
     public void draw(GL2 gl, GLU glu, GLUT glut, boolean stickFigure, float tAnim) {
         gl.glPushMatrix();
 
-        gl.glColor3ub((byte)0, (byte)255, (byte)0);
-        
         /**
          * Translate 'to' the position of the robot
          */
         gl.glTranslated(position.x, position.y, position.z);
 
         if (stickFigure) {
+            /**
+             * Sets the color to green for the stick figure.
+             */
+            gl.glColor3ub((byte) 0, (byte) 255, (byte) 0);
             drawStickFigure(gl, glu, glut);
         } else {
             drawRobot(gl, glu, glut);
         }
 
         gl.glColor3f(0, 0, 0);
+        unsetSpecularMaterialValues(gl);
         gl.glPopMatrix();
     }
 
     /**
-     * Draws the robot proper by drawing the geometry of the several robot parts.
-     * These methods can be called in any order since they all expect the 
-     * reference frame to be at the origin of the robot. 
+     * Draws the robot proper by drawing the geometry of the several robot
+     * parts. These methods can be called in any order since they all expect the
+     * reference frame to be at the origin of the robot.
      */
     private void drawRobot(GL2 gl, GLU glu, GLUT glut) {
-
         drawRobotLeg(gl, glu, glut, true);
         drawRobotLeg(gl, glu, glut, false);
         drawUpperBody(gl, glu, glut);
@@ -221,21 +240,21 @@ class Robot {
 
     /**
      * Draws the entire leg (including the shoe) of the robot. Starts from the
-     * bottom then moves up drawing the shoe, ankle, lower leg and upper leg. 
+     * bottom then moves up drawing the shoe, ankle, lower leg and upper leg.
      * Modifies the reference frame up after each item of geometry. At the end
      * it clears the transformed matrix to return the reference to where it was
-     * before calling the method. 
-     * 
-     * For the shoe and ankle seperate methods are called that draw those items 
-     * in more detail, the lower and upper leg consist out of a cylinder. 
-     * 
+     * before calling the method.
+     *
+     * For the shoe and ankle seperate methods are called that draw those items
+     * in more detail, the lower and upper leg consist out of a cylinder.
+     *
      * @param leftLeg Draws the left leg when true, otherwise it draws the right
      * leg.
      */
     private void drawRobotLeg(GL2 gl, GLU glu, GLUT glut, boolean leftLeg) {
         gl.glPushMatrix();
 
-        gl.glColor3f(1f, 0, 1f);
+        setRobotMaterialColor(gl);
 
         double translationOverXAxis = leftLeg ? -1 * DISTANCE_BETWEEN_LEG_AND_X_AXIS
                 : DISTANCE_BETWEEN_LEG_AND_X_AXIS;
@@ -244,11 +263,15 @@ class Robot {
 
         drawShoe(gl, glu, glut, SIZE * .025);
 
+        setRobotMaterialColor(gl);
+
         drawAnkle(gl, glu, glut);
+
+        unsetSpecularMaterialValues(gl);
 
         gl.glTranslated(0, 0, SHOE_HEIGHT + ANKLE_HEIGHT);
 
-        gl.glColor3f(1, 1, 0);
+        gl.glColor3fv(LIMB_COLOR, 0);
 
         glut.glutSolidCylinder(ROBOT_LIMB_WIDTH, 0.1 * SIZE, 32, 32);
 
@@ -475,6 +498,10 @@ class Robot {
      * cylinder then draws a cylinder, calculating the radius using a square
      * root function. So that there's a recognizable shape to the shoe.
      * Afterwards it pops the current matrix of the stack.</p>
+     * 
+     * <p>The bottom two cylinders of the shoe are drawn in a 
+     * different color, without any specular reflection. This represents the
+     * sole of the shoe. </p>
      */
     private void drawShoe(GL2 gl, GLU glu, GLUT glut, double maxRadius) {
 
@@ -484,11 +511,16 @@ class Robot {
 
         gl.glScaled(1, 2, 1);
 
-        final int nrDivisions = 25;
+        final int nrDivisions = 12;
         final double subdivionHeight = SHOE_HEIGHT * (1d / nrDivisions);
         final double step = maxRadius / Math.sqrt(nrDivisions);
 
         for (int i = 1; i <= nrDivisions; i++) {
+
+            if (i == nrDivisions - 1) {
+                gl.glColor3fv(SOLE_COLOR, 0);
+                unsetSpecularMaterialValues(gl);
+            }
 
             gl.glTranslated(0, 0, -subdivionHeight);
 
@@ -507,13 +539,15 @@ class Robot {
     private void drawUpperBody(GL2 gl, GLU glu, GLUT glut) {
         gl.glPushMatrix();
 
-        gl.glColor3ub((byte)204, (byte)153, (byte)255);
+        setRobotMaterialColor(gl);
 
         gl.glTranslated(0, 0, SHOULDER_HEIGHT);
 
         gl.glScaled(1, .666, 1);
 
         drawSolidCup(gl, glu, glut, LOWER_TORSO_WIDTH, UPPER_TORSO_WIDTH, TORSO_HEIGHT);
+
+        unsetSpecularMaterialValues(gl);
 
         gl.glPopMatrix();
     }
@@ -523,7 +557,7 @@ class Robot {
      * Draws a stack of cups on top of each other, each subsequent cup below and
      * wider than the previous cup. Based on a set number of cylinders in which
      * the cup is divided a step value is calculated. Based on an index the
-     * radius of the next cup is calculated. After drawing the cup it pops the 
+     * radius of the next cup is calculated. After drawing the cup it pops the
      * latest matrix of the stack to ensure that the matrix is reset to what it
      * was when the method was called.</p>
      *
@@ -534,7 +568,7 @@ class Robot {
     private void drawSolidCup(GL2 gl, GLU glu, GLUT glut, double bottomRadius, double upperRadius, double height) {
         gl.glPushMatrix();
 
-        final int nrDivisions = 60;
+        final int nrDivisions = 20;
         final double subdivisionHeight = height / nrDivisions;
         final double step = (bottomRadius - upperRadius) / nrDivisions;
 
@@ -552,9 +586,9 @@ class Robot {
      * arm position and rotation of the arm are different. The arm consists out
      * of a cup connecting the upper arm to the torso, an upper arm and a lower
      * arm. </p>
-     * 
+     *
      * @param leftArm Whether the left arm should be drawn. If this is false the
-     * right arm is drawn. 
+     * right arm is drawn.
      */
     private void drawRobotArm(GL2 gl, GLU glu, GLUT glut, boolean leftArm) {
         gl.glPushMatrix();
@@ -566,9 +600,12 @@ class Robot {
 
         gl.glRotated(armRotation, 0, 1, 0);
 
-        gl.glColor3ub((byte)255, (byte)220, (byte)77);
+        setRobotMaterialColor(gl);
 
         drawSolidCup(gl, glu, glut, ROBOT_LIMB_WIDTH * 2, ROBOT_LIMB_WIDTH, SKELETON_UPPER_ARM_LENGTH / 2);
+
+        unsetSpecularMaterialValues(gl);
+        gl.glColor3fv(LIMB_COLOR, 0);
 
         gl.glTranslated(0, 0, -.15 * SIZE);
 
@@ -582,19 +619,16 @@ class Robot {
     }
 
     /**
-     * 
-     * Draws the head and neck of the robot. The head consists out of three cubes, two 
-     * forming the head shape and one red cube representing the mouth. The head
-     * also consists out of two ears and two eyes. 
-     * 
-     * The neck is drawn as a cylinder starting from the shoulders. The first 
+     *
+     * Draws the head and neck of the robot. The head consists out of three
+     * cubes, two forming the head shape and one red cube representing the
+     * mouth. The head also consists out of two ears and two eyes.
+     *
+     * The neck is drawn as a cylinder starting from the shoulders. The first
      * part of the head that's drawn is the back part, which spawns the entire
-     * width and height. in front of that the block representing the face is 
-     * drawn and below that the red part representing the mouth is drawn. 
-     * 
-     * @param gl
-     * @param glu
-     * @param glut 
+     * width and height. in front of that the block representing the face is
+     * drawn and below that the red part representing the mouth is drawn.
+     *
      */
     private void drawRobotHead(GL2 gl, GLU glu, GLUT glut) {
         gl.glPushMatrix();
@@ -603,27 +637,28 @@ class Robot {
 
         glut.glutSolidCylinder(ROBOT_LIMB_WIDTH, NECK_LENGTH, 32, 32);
 
-        gl.glColor3ub((byte)128, (byte)213, (byte)255);
+        gl.glColor3fv(ROBOT_HEAD_COLOR, 0);
 
         gl.glTranslated(0, 0, .15 * SIZE);
 
         /**
          * Pushes a new matrix, moves to the center of the back part of the head
-         * and draws it. Afterwards pop the matrix so that the position
-         * is returned to the center of the head. 
+         * and draws it. Afterwards pop the matrix so that the position is
+         * returned to the center of the head.
          */
         gl.glPushMatrix();
         {
             gl.glTranslated(0, -.025 * SIZE, 0);
             gl.glScaled(2, 1.5, 2);
 
-            glut.glutSolidCube((float)(.1 * SIZE));
+            glut.glutSolidCube((float) (.1 * SIZE));
         }
         gl.glPopMatrix();
 
         /**
          * Draws the upper frontal part of the head. Clears the matrix stack
-         * after finishing to move the everything back to the center of the head.
+         * after finishing to move the everything back to the center of the
+         * head.
          */
         gl.glPushMatrix();
         {
@@ -640,7 +675,7 @@ class Robot {
         gl.glPushMatrix();
         {
             gl.glTranslated(0, .075 * SIZE, -.075 * SIZE);
-            gl.glColor3ub((byte)230, (byte)46, (byte)0);
+            gl.glColor3ub((byte) 230, (byte) 46, (byte) 0);
             gl.glScaled(4, 1, 1);
             glut.glutSolidCube((float) (.05 * SIZE));
         }
@@ -656,18 +691,17 @@ class Robot {
     }
 
     /**
-     * Draws either the right or left ear of the robot. An ear consists out of 
-     * a wide but short cup attached to the head. Based on whether it's the 
-     * right or left ear the reference frame is rotated. 
-     * 
-     * @param leftEar Draws the leftear if true, otherwise draws the right
-     * ear. 
+     * Draws either the right or left ear of the robot. An ear consists out of a
+     * wide but short cup attached to the head. Based on whether it's the right
+     * or left ear the reference frame is rotated.
+     *
+     * @param leftEar Draws the leftear if true, otherwise draws the right ear.
      */
     private void drawEar(GL2 gl, GLU glu, GLUT glut, boolean leftEar) {
         double translationXAxis = leftEar ? -0.125 * SIZE : .125 * SIZE;
         double rotationYAxis = leftEar ? -90 : 90;
 
-        gl.glColor3ub((byte)255, (byte)220, (byte)77);
+        gl.glColor3fv(LIMB_COLOR, 0);
 
         gl.glPushMatrix();
 
@@ -683,14 +717,14 @@ class Robot {
     /**
      * Draws either the left or right eye. The eye consists out of a stretched
      * white cylinder and a small black sphere. The eyes are drawn to the right
-     * or left of the center of the head. The reference frame is first 
-     * translated to the position of the eye, and then rotated to ensure the 
-     * eyes are put on on the correct position. 
-     * 
-     * The pupil is placed halfway into the white cylinder to make it look like
-     * a half sphere. 
+     * or left of the center of the head. The reference frame is first
+     * translated to the position of the eye, and then rotated to ensure the
+     * eyes are put on on the correct position.
      *
-     * @param leftEye  Draws the left eye when true, otherwise it draws the right
+     * The pupil is placed halfway into the white cylinder to make it look like
+     * a half sphere.
+     *
+     * @param leftEye Draws the left eye when true, otherwise it draws the right
      * eye.
      */
     private void drawEye(GL2 gl, GLU glu, GLUT glut, boolean leftEye) {
@@ -719,6 +753,26 @@ class Robot {
         glut.glutSolidSphere(.01 * SIZE, 32, 32);
 
         gl.glPopMatrix();
+    }
+
+    /**
+     * Sets the color, specular color and specular intensity of the robot's own
+     * color.
+     */
+    private void setRobotMaterialColor(GL2 gl) {
+        gl.glColor3f(material.diffuse[0], material.diffuse[1], material.diffuse[2]);
+        gl.glMaterialfv(GL.GL_FRONT, GLLightingFunc.GL_SPECULAR, material.specular, 0);
+        gl.glMaterialf(GL.GL_FRONT_AND_BACK, GLLightingFunc.GL_SHININESS, material.shininess);
+    }
+
+    /**
+     * Unsets the specular values to zero so that the next object can be drawn
+     * without any specular reflection. 
+     * @param gl 
+     */
+    private void unsetSpecularMaterialValues(GL2 gl) {
+        gl.glMaterialfv(GL.GL_FRONT, GLLightingFunc.GL_SPECULAR, new float[]{0, 0, 0}, 0);
+        gl.glMaterialf(GL.GL_FRONT_AND_BACK, GLLightingFunc.GL_SHININESS, 0);
     }
 
 }
