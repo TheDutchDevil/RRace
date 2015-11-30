@@ -143,9 +143,9 @@ class Robot {
     private static final double ANKLE_HEIGHT = .05 * SIZE;
 
     /**
-     * Width of the robot ankle.
+     * Radius of the robot ankle.
      */
-    private static final double ANKLE_WIDTH = .0175 * SIZE;
+    private static final double ANKLE_RADIUS = .0175 * SIZE;
 
     /**
      * Height of the torso. That is from the shoulders to the hip.
@@ -159,14 +159,14 @@ class Robot {
     private static final double SHOULDER_HEIGHT = SHOULDER_JOINT_HEIGHT + .025 * SIZE;
 
     /**
-     * Width at the top of the torso.
+     * Radius at the top of the torso.
      */
-    private static final double UPPER_TORSO_WIDTH = 0.1 * SIZE;
+    private static final double UPPER_TORSO_RADIUS = 0.1 * SIZE;
 
     /**
-     * Width at the bottom of the torso.
+     * Radius at the bottom of the torso.
      */
-    private static final double LOWER_TORSO_WIDTH = 0.2 * SIZE;
+    private static final double LOWER_TORSO_RADIUS = 0.2 * SIZE;
 
     /**
      * Length of the robot neck.
@@ -176,7 +176,7 @@ class Robot {
     /**
      * Used for both legs and arms.
      */
-    private static final double ROBOT_LIMB_WIDTH = .0125 * SIZE;
+    private static final double ROBOT_LIMB_RADIUS = .0125 * SIZE;
 
     /**
      * The position of the robot.
@@ -196,9 +196,9 @@ class Robot {
     /**
      * Constructs the robot with initial parameters.
      */
-    public Robot(Material material, Vector pos) {
+    public Robot(Material material, Vector position) {
         this.material = material;
-        this.position = pos;
+        this.position = position;
     }
 
     /**
@@ -280,11 +280,11 @@ class Robot {
 
         gl.glColor3fv(LIMB_COLOR, 0);
 
-        glut.glutSolidCylinder(ROBOT_LIMB_WIDTH, 0.1 * SIZE, 32, 32);
+        glut.glutSolidCylinder(ROBOT_LIMB_RADIUS, 0.1 * SIZE, 32, 32);
 
         gl.glTranslated(0, 0, .1 * SIZE);
 
-        glut.glutSolidCylinder(ROBOT_LIMB_WIDTH, .15 * SIZE, 32, 32);
+        glut.glutSolidCylinder(ROBOT_LIMB_RADIUS, .15 * SIZE, 32, 32);
 
         gl.glPopMatrix();
     }
@@ -486,7 +486,7 @@ class Robot {
      * ankle.
      */
     private void drawAnkle(GL2 gl, GLU glu, GLUT glut) {
-        glut.glutSolidCylinder(ANKLE_WIDTH, SHOE_HEIGHT + ANKLE_HEIGHT, 32, 32);
+        glut.glutSolidCylinder(ANKLE_RADIUS, SHOE_HEIGHT + ANKLE_HEIGHT, 32, 32);
     }
 
     /**
@@ -553,7 +553,7 @@ class Robot {
 
         gl.glScaled(1, .666, 1);
 
-        drawSolidCup(gl, glu, glut, LOWER_TORSO_WIDTH, UPPER_TORSO_WIDTH, TORSO_HEIGHT);
+        drawSolidCup(gl, glu, glut, LOWER_TORSO_RADIUS, UPPER_TORSO_RADIUS, TORSO_HEIGHT);
 
         unsetSpecularMaterialValues(gl);
 
@@ -657,18 +657,22 @@ class Robot {
 
         setRobotMaterialColor(gl);
 
-        drawSolidCup(gl, glu, glut, ROBOT_LIMB_WIDTH * 2, ROBOT_LIMB_WIDTH, SKELETON_UPPER_ARM_LENGTH / 2);
+        drawSolidCup(gl, glu, glut, ROBOT_LIMB_RADIUS * 2, ROBOT_LIMB_RADIUS, SKELETON_UPPER_ARM_LENGTH / 2);
 
         unsetSpecularMaterialValues(gl);
         gl.glColor3fv(LIMB_COLOR, 0);
 
         gl.glTranslated(0, 0, -.15 * SIZE);
 
-        glut.glutSolidCylinder(ROBOT_LIMB_WIDTH, SKELETON_UPPER_ARM_LENGTH / 2, 32, 32);
+        glut.glutSolidCylinder(ROBOT_LIMB_RADIUS, SKELETON_UPPER_ARM_LENGTH / 2, 32, 32);
 
         gl.glRotated(ANGLE_BETWEEN_X_AND_LOWER_ARM, 1, 0, 0);
 
-        glut.glutSolidCylinder(ROBOT_LIMB_WIDTH, SKELETON_LOWER_ARM_LENGTH, 32, 32);
+        glut.glutSolidCylinder(ROBOT_LIMB_RADIUS, SKELETON_LOWER_ARM_LENGTH, 32, 32);
+        
+        gl.glTranslated(0, 0, SKELETON_LOWER_ARM_LENGTH);
+        
+        glut.glutSolidSphere(ROBOT_LIMB_RADIUS * 2, 16, 16);
 
         gl.glPopMatrix();
     }
@@ -690,7 +694,7 @@ class Robot {
 
         gl.glTranslated(0, 0, SHOULDER_HEIGHT);
 
-        glut.glutSolidCylinder(ROBOT_LIMB_WIDTH, NECK_LENGTH, 32, 32);
+        glut.glutSolidCylinder(ROBOT_LIMB_RADIUS, NECK_LENGTH, 32, 32);
 
         gl.glColor3fv(ROBOT_HEAD_COLOR, 0);
 
