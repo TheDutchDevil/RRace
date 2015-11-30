@@ -1,6 +1,8 @@
 package robotrace;
 
 import com.jogamp.opengl.util.gl2.GLUT;
+import java.util.ArrayList;
+import java.util.List;
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
 import javax.media.opengl.fixedfunc.GLLightingFunc;
@@ -34,6 +36,11 @@ class Robot {
      * Metallic like color used in the head of the robot.
      */
     private static final float[] ROBOT_HEAD_COLOR = {160f / 255f, 160f / 255f, 160f / 255f};
+
+    /**
+     * Color of the hair, dark red.
+     */
+    private static final float[] ROBOT_HAIR_COLOR = {154f / 255f, 54f / 255f, 5f / 255f};
 
     /**
      * Radius of a joint of the stick figure skeleton.
@@ -498,10 +505,11 @@ class Robot {
      * cylinder then draws a cylinder, calculating the radius using a square
      * root function. So that there's a recognizable shape to the shoe.
      * Afterwards it pops the current matrix of the stack.</p>
-     * 
-     * <p>The bottom two cylinders of the shoe are drawn in a 
-     * different color, without any specular reflection. This represents the
-     * sole of the shoe. </p>
+     *
+     * <p>
+     * The bottom two cylinders of the shoe are drawn in a different color,
+     * without any specular reflection. This represents the sole of the shoe.
+     * </p>
      */
     private void drawShoe(GL2 gl, GLU glu, GLUT glut, double maxRadius) {
 
@@ -575,6 +583,53 @@ class Robot {
         for (int i = 0; i < nrDivisions; i++) {
             gl.glTranslated(0, 0, -subdivisionHeight);
             glut.glutSolidCylinder(upperRadius + step * i, subdivisionHeight, 32, 32);
+        }
+
+        gl.glPopMatrix();
+    }
+
+    /**
+     * <p>
+     * Draws three strands of hair originating from a half sphere on top of the
+     * robot head. The method starts by translating up to the top of the head,
+     * draws a small sphere. With the center of the sphere lying on top of the
+     * robot head. Before the start of this method the local reference frame
+     * should be at the center of the robot head.</p>
+     *
+     * <p>
+     * The hairs strands that are drawn are stored in a list of vectors, where
+     * the x component is the rotation over the x-axis, the y component is the
+     * rotation on the y axis and the z component is the length of the hair
+     * strands.</p>
+     *
+     * <p>
+     * From the center of the sphere it draws three cones with a different
+     * rotation and different length.</p>
+     */
+    private void drawRobotHair(GL2 gl, GLU glu, GLUT glut) {
+        gl.glPushMatrix();
+
+        gl.glColor3fv(ROBOT_HAIR_COLOR, 0);
+
+        gl.glTranslated(0, 0, 0.1 * SIZE);
+
+        glut.glutSolidSphere(0.025 * SIZE, 16, 16);
+
+        List<Vector> hairStrands = new ArrayList<>();
+
+        hairStrands.add(new Vector(0, 0, 0.1 * SIZE));
+        hairStrands.add(new Vector(30, 15, .08 * SIZE));
+        hairStrands.add(new Vector(20, -35, 0.1 * SIZE));
+
+        for (Vector hair : hairStrands) {
+            gl.glPushMatrix();
+
+            gl.glRotated(hair.x, 1, 0, 0);
+            gl.glRotated(hair.y, 0, 1, 0);
+
+            glut.glutSolidCylinder(0.005 * SIZE, hair.z, 16, 16);
+
+            gl.glPopMatrix();
         }
 
         gl.glPopMatrix();
@@ -687,6 +742,8 @@ class Robot {
         drawEye(gl, glu, glut, true);
         drawEye(gl, glu, glut, false);
 
+        drawRobotHair(gl, glu, glut);
+
         gl.glPopMatrix();
     }
 
@@ -767,8 +824,9 @@ class Robot {
 
     /**
      * Unsets the specular values to zero so that the next object can be drawn
-     * without any specular reflection. 
-     * @param gl 
+     * without any specular reflection.
+     *
+     * @param gl
      */
     private void unsetSpecularMaterialValues(GL2 gl) {
         gl.glMaterialfv(GL.GL_FRONT, GLLightingFunc.GL_SPECULAR, new float[]{0, 0, 0}, 0);
