@@ -210,11 +210,15 @@ class Robot {
      */
     public void draw(GL2 gl, GLU glu, GLUT glut, boolean stickFigure, float tAnim) {
         gl.glPushMatrix();
-
+        
         /**
          * Translate 'to' the position of the robot
          */
         gl.glTranslated(position.x, position.y, position.z);
+        
+        int additonalAngle = direction.y < 0 ? 180 : 0;
+        
+        gl.glRotated( (- Math.toDegrees(Math.atan(direction.x / direction.y))) + additonalAngle, 0, 0, 1); //TODO
 
         if (stickFigure) {
             /**
@@ -280,11 +284,11 @@ class Robot {
 
         gl.glColor3fv(LIMB_COLOR, 0);
 
-        glut.glutSolidCylinder(ROBOT_LIMB_RADIUS, 0.1 * SIZE, 32, 32);
+        glut.glutSolidCylinder(ROBOT_LIMB_RADIUS, 0.1 * SIZE, 16, 16);
 
         gl.glTranslated(0, 0, .1 * SIZE);
 
-        glut.glutSolidCylinder(ROBOT_LIMB_RADIUS, .15 * SIZE, 32, 32);
+        glut.glutSolidCylinder(ROBOT_LIMB_RADIUS, .15 * SIZE, 16, 16);
 
         gl.glPopMatrix();
     }
@@ -321,19 +325,19 @@ class Robot {
 
         gl.glTranslated(translationOverXAxis, 0, SHOE_HEIGHT);
 
-        glut.glutSolidSphere(SKELETON_JOINT_RADIUS, 32, 32);
+        glut.glutSolidSphere(SKELETON_JOINT_RADIUS, 16, 16);
 
-        glut.glutSolidCylinder(SKELETON_LIMB_RADIUS, SKELETON_LOWER_LEG_HEIGHT, 32, 32);
+        glut.glutSolidCylinder(SKELETON_LIMB_RADIUS, SKELETON_LOWER_LEG_HEIGHT, 16, 16);
 
         gl.glTranslated(0, 0, SKELETON_LOWER_LEG_HEIGHT);
 
-        glut.glutSolidSphere(SKELETON_JOINT_RADIUS, 32, 32);
+        glut.glutSolidSphere(SKELETON_JOINT_RADIUS, 16, 16);
 
-        glut.glutSolidCylinder(SKELETON_LIMB_RADIUS, SKELETON_UPPER_LEG_HEIGHT, 32, 32);
+        glut.glutSolidCylinder(SKELETON_LIMB_RADIUS, SKELETON_UPPER_LEG_HEIGHT, 16, 16);
 
         gl.glTranslated(0, 0, SKELETON_UPPER_LEG_HEIGHT);
 
-        glut.glutSolidSphere(SKELETON_JOINT_RADIUS, 32, 32);
+        glut.glutSolidSphere(SKELETON_JOINT_RADIUS, 16, 16);
 
         gl.glPopMatrix();
     }
@@ -363,12 +367,12 @@ class Robot {
 
                 gl.glRotated(90, 0, 1, 0);
 
-                glut.glutSolidCylinder(SKELETON_LIMB_RADIUS, SKELETON_HORIZONTAL_HIPBONE_LENGTH, 32, 32);
+                glut.glutSolidCylinder(SKELETON_LIMB_RADIUS, SKELETON_HORIZONTAL_HIPBONE_LENGTH, 16, 16);
 
             }
             gl.glPopMatrix();
 
-            glut.glutSolidCylinder(SKELETON_LIMB_RADIUS, SKELETON_BACKBONE_LENGTH, 32, 32);
+            glut.glutSolidCylinder(SKELETON_LIMB_RADIUS, SKELETON_BACKBONE_LENGTH, 16, 16);
 
             gl.glTranslated(0, 0, SKELETON_BACKBONE_LENGTH);
 
@@ -377,15 +381,15 @@ class Robot {
 
                 gl.glTranslated(-1 * DISTANCE_BETWEEN_SHOUDLER_AND_X_AXIS, 0, 0);
 
-                glut.glutSolidSphere(SKELETON_JOINT_RADIUS, 32, 32);
+                glut.glutSolidSphere(SKELETON_JOINT_RADIUS, 16, 16);
 
                 gl.glRotated(90, 0, 1, 0);
 
-                glut.glutSolidCylinder(SKELETON_LIMB_RADIUS, SKELETON_HORIZONTAL_SHOULDER_LENGTH, 32, 32);
+                glut.glutSolidCylinder(SKELETON_LIMB_RADIUS, SKELETON_HORIZONTAL_SHOULDER_LENGTH, 16, 16);
 
                 gl.glTranslated(0, 0, .2 * SIZE);
 
-                glut.glutSolidSphere(SKELETON_JOINT_RADIUS, 32, 32);
+                glut.glutSolidSphere(SKELETON_JOINT_RADIUS, 16, 16);
             }
             gl.glPopMatrix();
         }
@@ -412,19 +416,19 @@ class Robot {
 
         gl.glRotated(upperArmRotation, 0, 1, 0);
 
-        glut.glutSolidCylinder(SKELETON_LIMB_RADIUS, SKELETON_UPPER_ARM_LENGTH, 32, 32);
+        glut.glutSolidCylinder(SKELETON_LIMB_RADIUS, SKELETON_UPPER_ARM_LENGTH, 16, 16);
 
         gl.glTranslated(0, 0, SKELETON_UPPER_ARM_LENGTH);
 
-        glut.glutSolidSphere(SKELETON_JOINT_RADIUS, 32, 32);
+        glut.glutSolidSphere(SKELETON_JOINT_RADIUS, 16, 16);
 
         gl.glRotated(ANGLE_BETWEEN_X_AND_LOWER_ARM, 1, 0, 0);
 
-        glut.glutSolidCylinder(SKELETON_LIMB_RADIUS, SKELETON_LOWER_ARM_LENGTH, 32, 32);
+        glut.glutSolidCylinder(SKELETON_LIMB_RADIUS, SKELETON_LOWER_ARM_LENGTH, 16, 16);
 
         gl.glTranslated(0, 0, SKELETON_LOWER_ARM_LENGTH);
 
-        glut.glutSolidSphere(SKELETON_JOINT_RADIUS, 32, 32);
+        glut.glutSolidSphere(SKELETON_JOINT_RADIUS, 16, 16);
 
         gl.glPopMatrix();
     }
@@ -449,13 +453,13 @@ class Robot {
 
         gl.glTranslated(0, 0, SHOULDER_JOINT_HEIGHT);
 
-        glut.glutSolidCylinder(SKELETON_LIMB_RADIUS, SKELETON_NECK_BONE_LENGTH, 32, 32);
+        glut.glutSolidCylinder(SKELETON_LIMB_RADIUS, SKELETON_NECK_BONE_LENGTH, 16, 16);
 
         gl.glTranslated(0, 0, SKELETON_NECK_BONE_LENGTH);
 
         glut.glutSolidSphere(SKELETON_JOINT_RADIUS, 32, 32);
 
-        glut.glutSolidCylinder(SKELETON_LIMB_RADIUS, SKELETON_UPPER_NECK_TO_JAW_HEIGHT, 32, 32);
+        glut.glutSolidCylinder(SKELETON_LIMB_RADIUS, SKELETON_UPPER_NECK_TO_JAW_HEIGHT, 16, 16);
 
         gl.glTranslated(0, 0, SKELETON_UPPER_NECK_TO_JAW_HEIGHT);
 
@@ -463,19 +467,19 @@ class Robot {
         {
             gl.glRotated(-90, 1, 0, 0);
 
-            glut.glutSolidCylinder(SKELETON_LIMB_RADIUS, SKELETON_SPINE_TO_JAW_DISTANCE, 32, 32);
+            glut.glutSolidCylinder(SKELETON_LIMB_RADIUS, SKELETON_SPINE_TO_JAW_DISTANCE, 16, 16);
 
             gl.glTranslated(0, 0, SKELETON_SPINE_TO_JAW_DISTANCE);
 
-            glut.glutSolidSphere(SKELETON_JOINT_RADIUS, 32, 32);
+            glut.glutSolidSphere(SKELETON_JOINT_RADIUS, 16, 16);
         }
         gl.glPopMatrix();
 
-        glut.glutSolidCylinder(SKELETON_LIMB_RADIUS, SKELETON_JAW_TO_HAIR_HEIGHT, 32, 32);
+        glut.glutSolidCylinder(SKELETON_LIMB_RADIUS, SKELETON_JAW_TO_HAIR_HEIGHT, 16, 16);
 
         gl.glTranslated(0, 0, SKELETON_JAW_TO_HAIR_HEIGHT);
 
-        glut.glutSolidSphere(SKELETON_JOINT_RADIUS, 32, 32);
+        glut.glutSolidSphere(SKELETON_JOINT_RADIUS, 16, 16);
 
         gl.glPopMatrix();
     }
@@ -486,7 +490,7 @@ class Robot {
      * ankle.
      */
     private void drawAnkle(GL2 gl, GLU glu, GLUT glut) {
-        glut.glutSolidCylinder(ANKLE_RADIUS, SHOE_HEIGHT + ANKLE_HEIGHT, 32, 32);
+        glut.glutSolidCylinder(ANKLE_RADIUS, SHOE_HEIGHT + ANKLE_HEIGHT, 16, 16);
     }
 
     /**
@@ -532,7 +536,7 @@ class Robot {
 
             gl.glTranslated(0, 0, -subdivionHeight);
 
-            glut.glutSolidCylinder(step * Math.sqrt(i), subdivionHeight, 32, 32);
+            glut.glutSolidCylinder(step * Math.sqrt(i), subdivionHeight, 16, 16);
         }
 
         gl.glPopMatrix();
@@ -582,7 +586,7 @@ class Robot {
 
         for (int i = 0; i < nrDivisions; i++) {
             gl.glTranslated(0, 0, -subdivisionHeight);
-            glut.glutSolidCylinder(upperRadius + step * i, subdivisionHeight, 32, 32);
+            glut.glutSolidCylinder(upperRadius + step * i, subdivisionHeight, 16, 16);
         }
 
         gl.glPopMatrix();
@@ -627,7 +631,7 @@ class Robot {
             gl.glRotated(hair.x, 1, 0, 0);
             gl.glRotated(hair.y, 0, 1, 0);
 
-            glut.glutSolidCylinder(0.005 * SIZE, hair.z, 16, 16);
+            glut.glutSolidCylinder(0.005 * SIZE, hair.z, 8, 8);
 
             gl.glPopMatrix();
         }
@@ -664,11 +668,11 @@ class Robot {
 
         gl.glTranslated(0, 0, -.15 * SIZE);
 
-        glut.glutSolidCylinder(ROBOT_LIMB_RADIUS, SKELETON_UPPER_ARM_LENGTH / 2, 32, 32);
+        glut.glutSolidCylinder(ROBOT_LIMB_RADIUS, SKELETON_UPPER_ARM_LENGTH / 2, 16, 16);
 
         gl.glRotated(ANGLE_BETWEEN_X_AND_LOWER_ARM, 1, 0, 0);
 
-        glut.glutSolidCylinder(ROBOT_LIMB_RADIUS, SKELETON_LOWER_ARM_LENGTH, 32, 32);
+        glut.glutSolidCylinder(ROBOT_LIMB_RADIUS, SKELETON_LOWER_ARM_LENGTH, 16, 16);
         
         gl.glTranslated(0, 0, SKELETON_LOWER_ARM_LENGTH);
         
@@ -694,7 +698,7 @@ class Robot {
 
         gl.glTranslated(0, 0, SHOULDER_HEIGHT);
 
-        glut.glutSolidCylinder(ROBOT_LIMB_RADIUS, NECK_LENGTH, 32, 32);
+        glut.glutSolidCylinder(ROBOT_LIMB_RADIUS, NECK_LENGTH, 16, 16);
 
         gl.glColor3fv(ROBOT_HEAD_COLOR, 0);
 
@@ -803,7 +807,7 @@ class Robot {
         gl.glPushMatrix();
         {
             gl.glScaled(1, 2, 1);
-            glut.glutSolidCylinder(0.018 * SIZE, 0.0125 * SIZE, 32, 32);
+            glut.glutSolidCylinder(0.018 * SIZE, 0.0125 * SIZE, 16, 16);
         }
         gl.glPopMatrix();
 
@@ -811,7 +815,7 @@ class Robot {
 
         gl.glTranslated(0, .01 * SIZE, .0125 * SIZE);
 
-        glut.glutSolidSphere(.01 * SIZE, 32, 32);
+        glut.glutSolidSphere(.01 * SIZE, 16, 16);
 
         gl.glPopMatrix();
     }

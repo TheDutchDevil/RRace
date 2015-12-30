@@ -187,15 +187,18 @@ public class RobotRace extends Base {
          * the near and far clipping plane (Last two parameters) are based on
          * the values mentioned in the assignment document.
          */
+        if(gs.camMode < 1 || gs.camMode > 4) {
         glu.gluPerspective(40, (float) gs.w / (float) gs.h, 0.1 * gs.vDist, 10 * gs.vDist);
-
+        }else {
+            glu.gluPerspective(40, (float) gs.w / (float) gs.h, 0.1 * 1, 10 * 10);
+        }
         // Set camera.
         gl.glMatrixMode(GL_MODELVIEW);
         gl.glLoadIdentity();
 
         // Update the view according to the camera mode and robot of interest.
         // For camera modes 1 to 4, determine which robot to focus on.
-        camera.update(gs, robots[0]);
+        camera.update(gs, robots[2]);
         glu.gluLookAt(camera.eye.x(), camera.eye.y(), camera.eye.z(),
                 camera.center.x(), camera.center.y(), camera.center.z(),
                 camera.up.x(), camera.up.y(), camera.up.z());
@@ -242,9 +245,25 @@ public class RobotRace extends Base {
         if (gs.showAxes) {
             drawAxisFrame();
         }
+        
+        float animVal = gs.tAnim;
+        
+        while(animVal > 30) {
+            animVal -= 30; //TODO
+        }
+        
+        float posOnTrack = animVal /30;
 
         // Get the position and direction of the first robot.
-        //robots[0].position = raceTracks[gs.trackNr].getLanePoint(0, 0);
+        robots[0].position = raceTracks[gs.trackNr].getLanePoint(1, posOnTrack);
+        robots[1].position = raceTracks[gs.trackNr].getLanePoint(2, posOnTrack);
+        robots[2].position = raceTracks[gs.trackNr].getLanePoint(3, posOnTrack);
+        robots[3].position = raceTracks[gs.trackNr].getLanePoint(4, posOnTrack);
+        
+        robots[0].direction = raceTracks[gs.trackNr].getLaneTangent(1, posOnTrack);
+        robots[1].direction = raceTracks[gs.trackNr].getLaneTangent(2, posOnTrack);
+        robots[2].direction = raceTracks[gs.trackNr].getLaneTangent(3, posOnTrack);
+        robots[3].direction = raceTracks[gs.trackNr].getLaneTangent(4, posOnTrack);
         //robots[0].direction = raceTracks[gs.trackNr].getLaneTangent(0, 0);
         // Draw all robots.
         robots[0].draw(gl, glu, glut, gs.showStick, gs.tAnim);
