@@ -63,11 +63,21 @@ public class RaceTrack {
      * a is the lane, starting from 1 (innermost) to 4 (outermost).
      */
     public Vector getLanePoint(int lane, double t) {
+        Vector point, tangent;
+        
         if (null == controlPoints) {
-            return getPoint(t).subtract(Vector.Z).normalized().scale(getPoint(t).subtract(Vector.Z).length() + (-2.5 * LANE_WIDTH + lane * LANE_WIDTH)).add(Vector.Z);
+            point = getPoint(t);
+            tangent = getTangent(t);
         } else {
-            return getCubicBezierPoint(t).subtract(Vector.Z).normalized().scale(getPoint(t).subtract(Vector.Z).length() + (-2.5 * LANE_WIDTH + lane * LANE_WIDTH)).add(Vector.Z);
+            point = getCubicBezierPoint(t);
+            tangent = getCubicBezierTangent(t);
         }
+        
+        Vector perpendicular = tangent.cross(Vector.Z).normalized();
+        
+        
+        
+        return point.add(perpendicular.scale(-2.5 * LANE_WIDTH + lane*LANE_WIDTH));
     }
 
     /**
@@ -108,14 +118,21 @@ public class RaceTrack {
 
         double segLength = 1d / segments;
 
-        for (int i = 0; i < segments; i++) {
-            if (t - segLength * (i + 1) < 0) {
-                currSegment = i;
-                break;
-            }
-        }
+        double newT;
 
-        double newT = ((t - (segLength * currSegment)) % segLength) * segments;
+        if (t == 1) {
+            currSegment = segments - 1;
+            newT = 1;
+        } else {
+            for (int i = 0; i < segments; i++) {
+                if (t - segLength * (i + 1) < 0) {
+                    currSegment = i;
+                    break;
+                }
+            }
+
+            newT = ((t - (segLength * currSegment)) % segLength) * segments;
+        }
 
         return getCubicBezierPoint(newT, controlPoints[currSegment * 3],
                 controlPoints[currSegment * 3 + 1],
@@ -146,14 +163,21 @@ public class RaceTrack {
 
         double segLength = 1d / segments;
 
-        for (int i = 0; i < segments; i++) {
-            if (t - segLength * (i + 1) < 0) {
-                currSegment = i;
-                break;
-            }
-        }
+        double newT;
 
-        double newT = ((t - (segLength * currSegment)) % segLength) * segments;
+        if (t == 1) {
+            newT = 1;
+            currSegment = segments - 1;
+        } else {
+            for (int i = 0; i < segments; i++) {
+                if (t - segLength * (i + 1) < 0) {
+                    currSegment = i;
+                    break;
+                }
+            }
+
+            newT = ((t - (segLength * currSegment)) % segLength) * segments;
+        }
 
         return getCubicBezierTangent(newT, controlPoints[currSegment * 3],
                 controlPoints[currSegment * 3 + 1],
