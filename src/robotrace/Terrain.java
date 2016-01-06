@@ -1,6 +1,9 @@
 package robotrace;
 
 import com.jogamp.opengl.util.gl2.GLUT;
+import java.awt.Color;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import javax.media.opengl.GL2;
 import javax.media.opengl.glu.GLU;
 
@@ -9,24 +12,193 @@ import javax.media.opengl.glu.GLU;
  */
 class Terrain {
 
+    private static final int TERRAIN_STEPS = 140;
+
+    private static final Color[] TEXTURE_COLORS = new Color[]{new Color(44, 170, 211, 255), new Color(44, 170, 211, 255), new Color(194, 178, 128, 255), new Color(51, 181, 32, 255)};
+
     /**
      * Can be used to set up a display list.
      */
     public Terrain() {
-        // code goes here ...
     }
 
     /**
      * Draws the terrain.
      */
     public void draw(GL2 gl, GLU glu, GLUT glut) {
-        // code goes here ...
+
+        double step = 1d / TERRAIN_STEPS;
+
+        double u = 0, v = 0;
+
+        gl.glDisable(GL2.GL_TEXTURE_2D);
+        gl.glEnable(GL2.GL_TEXTURE_1D);
+
+        create1DTexture(gl, TEXTURE_COLORS);
+
+        gl.glBegin(GL2.GL_TRIANGLE_STRIP);
+
+        boolean vAheadOfU = false;
+
+        double texCord = 0;
+
+        gl.glColor3d(1, 1, 1);
+
+        do {
+
+            Vector normal = tangentInU(u, v).cross(tangentInV(u, v)).normalized();
+
+            Vector position = pointAt(u, v);
+
+            if (position.z <= 0) {
+                texCord = .33d;
+            } else if (position.z <= .5d) {
+                texCord = .66d;
+            } else {
+                texCord = 1d;
+            }
+
+            gl.glNormal3d(normal.x, normal.y, normal.z);
+
+            gl.glTexCoord1d(texCord);
+
+            gl.glVertex3d(position.x, position.y, position.z);
+
+            if (!vAheadOfU) {
+                v += step;
+                vAheadOfU = true;
+            } else {
+                v -= step;
+                u += step;
+
+                vAheadOfU = false;
+            }
+
+            if (u > 1) {
+                u = 0;
+                v += step;
+                gl.glEnd();
+
+                gl.glBegin(GL2.GL_TRIANGLE_STRIP);
+            }
+
+        } while (u <= 1 && v <= 1);
+
+        gl.glEnd();
+
+        gl.glDisable(GL2.GL_TEXTURE_1D);
+        gl.glEnable(GL2.GL_TEXTURE_2D);
+        
+        drawTransparentPolygon(gl, glu, glut);
+    }
+    
+    private void drawTransparentPolygon(GL2 gl, GLU glu, GLUT glut) {
+        
+        gl.glColor4d(.4, .4, .4, .2);
+        
+        gl.glBegin(GL2.GL_QUADS);
+        
+        gl.glNormal3d(0, -1, 0);
+        
+        gl.glVertex3d(20, -20, 0);
+        gl.glVertex3d(-20, -20, 0);
+        gl.glVertex3d(-20, -20, -1);
+        gl.glVertex3d(20, -20, -1);
+        
+        gl.glNormal3d(-1, 0, 0);
+        
+        gl.glVertex3d(-20, 20, 0);
+        gl.glVertex3d(-20, 20, -1);
+        gl.glVertex3d(-20, -20, -1);
+        gl.glVertex3d(-20, -20, 0);
+        
+        gl.glNormal3d(0, 1, 0);
+        
+        gl.glVertex3d(-20, 20, 0);
+        gl.glVertex3d(20, 20, 0);
+        gl.glVertex3d(20, 20, -1);
+        gl.glVertex3d(-20, 20, -1);
+        
+        gl.glNormal3d(1, 0, 0);
+        
+        gl.glVertex3d(20, 20, 0);
+        gl.glVertex3d(20, -20, 0);
+        gl.glVertex3d(20, -20, -1);
+        gl.glVertex3d(20, 20, -1);
+        
+        gl.glNormal3d(0, 0, 1);
+        
+        gl.glVertex3d(20, 20, 0);
+        gl.glVertex3d(-20, 20, 0);
+        gl.glVertex3d(-20, -20, 0);
+        gl.glVertex3d(20, -20, 0);
+        
+        gl.glEnd();
     }
 
     /**
      * Computes the elevation of the terrain at (x, y).
      */
-    public float heightAt(float x, float y) {
-        return 0; // <- code goes here
+    public double heightAt(double x, double y) {
+        return 0.6d * Math.cos(0.3d * x + 0.2d * y) + 0.4d * Math.cos(x - 0.5d * y);
     }
+
+    private Vector pointAt(double u, double v) {
+
+        double x, y, z;
+
+        x = u * 40 - 20;
+        y = v * 40 - 20;
+        z = heightAt(x, y);
+
+        return new Vector(x, y, z);
+    }
+
+    private Vector tangentInU(double u, double v) {
+
+        double x, y, z;
+
+        x = 40;
+        y = 0;
+        z = -7.2d * Math.sin(0.3d * (-20d + 40d * u) + 0.2d * (-20d + 40d * v)) + 16 * Math.sin(20d - 40d * u + 0.5d * (-20d + 40 * v));
+
+        return new Vector(x, y, z);
+    }
+
+    private Vector tangentInV(double u, double v) {
+        double x, y, z;
+
+        x = 0;
+        y = 40;
+        z = -4.8d * Math.sin(0.3d * (-20d + 40d * u) + 0.2d * (-20d + 40d * v)) - 8 * Math.sin(20d - 40d * u + 0.5d * (-20d + 40d * v));
+
+        return new Vector(x, y, z);
+    }
+
+    /**
+     * Creates a new 1D - texture.
+     *
+     * @param gl
+     * @param colors
+     * @return the texture ID for the generated texture.
+     */
+    private int create1DTexture(GL2 gl, Color[] colors) {
+        int[] texid = new int[]{-1};
+        gl.glGenTextures(1, texid, 0);
+        ByteBuffer bb = ByteBuffer.allocateDirect(colors.length * 4).order(ByteOrder.nativeOrder());
+        for (Color color : colors) {
+            int pixel = color.getRGB();
+            bb.put((byte) ((pixel >> 16) & 0xFF)); // Red component
+            bb.put((byte) ((pixel >> 8) & 0xFF));  // Green component
+            bb.put((byte) (pixel & 0xFF));         // Blue component
+            bb.put((byte) ((pixel >> 24) & 0xFF)); // Alpha component
+        }
+        bb.flip();
+        gl.glBindTexture(GL2.GL_TEXTURE_1D, texid[0]);
+        gl.glTexImage1D(GL2.GL_TEXTURE_1D, 0, GL2.GL_RGBA8, colors.length, 0, GL2.GL_RGBA, GL2.GL_UNSIGNED_BYTE, bb);
+        gl.glTexParameteri(GL2.GL_TEXTURE_1D, GL2.GL_TEXTURE_MIN_FILTER, GL2.GL_LINEAR);
+        gl.glTexParameteri(GL2.GL_TEXTURE_1D, GL2.GL_TEXTURE_MAG_FILTER, GL2.GL_LINEAR);
+        return texid[0];
+    }
+
 }
