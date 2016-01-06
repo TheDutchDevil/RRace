@@ -28,9 +28,9 @@ public class BezierTest {
             new Vector(0, 0, 0), new Vector(0, 2.5d, 0),
             new Vector(0, 5, 0), new Vector(0, 7.5d, 0)});
 
-        Vector lane1 = track.getLanePoint(1, 1);
+        Vector lane1 = track.getLanePoint(1, .5);
 
-        Assert.assertEquals("Wrong lane", new Vector(-1.5 * LANE_WIDTH, 7.5d, 0), lane1);
+        Assert.assertEquals("Wrong lane", new Vector(-1.5 * LANE_WIDTH, 7.5d / 2, 0), lane1);
     }
 
     @Test
