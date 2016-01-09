@@ -12,9 +12,22 @@ import javax.media.opengl.glu.GLU;
  */
 class Terrain {
 
+    /**
+     * The amount of horizontal and vertical steps in which the terrain is
+     * drawn.
+     */
     private static final int TERRAIN_STEPS = 140;
 
-    private static final Color[] TEXTURE_COLORS = new Color[]{new Color(44, 170, 211, 255), new Color(44, 170, 211, 255), new Color(194, 178, 128, 255), new Color(51, 181, 32, 255)};
+    /**
+     * Color array used for the 1D texture mapping of the terrain. The amount of
+     * colors in this array is a power of two. The first two colors are blue,
+     * the third one is a sand like color and the fourth color is green. 
+     */
+    private static final Color[] TEXTURE_COLORS = new Color[]
+    {   
+        new Color(44, 170, 211, 255), new Color(44, 170, 211, 255),
+        new Color(194, 178, 128, 255), new Color(51, 181, 32, 255)
+    };
 
     /**
      * Can be used to set up a display list.
@@ -88,51 +101,51 @@ class Terrain {
 
         gl.glDisable(GL2.GL_TEXTURE_1D);
         gl.glEnable(GL2.GL_TEXTURE_2D);
-        
+
         drawTransparentPolygon(gl, glu, glut);
     }
-    
+
     private void drawTransparentPolygon(GL2 gl, GLU glu, GLUT glut) {
-        
+
         gl.glColor4d(.4, .4, .4, .2);
-        
+
         gl.glBegin(GL2.GL_QUADS);
-        
+
         gl.glNormal3d(0, -1, 0);
-        
+
         gl.glVertex3d(20, -20, 0);
         gl.glVertex3d(-20, -20, 0);
         gl.glVertex3d(-20, -20, -1);
         gl.glVertex3d(20, -20, -1);
-        
+
         gl.glNormal3d(-1, 0, 0);
-        
+
         gl.glVertex3d(-20, 20, 0);
         gl.glVertex3d(-20, 20, -1);
         gl.glVertex3d(-20, -20, -1);
         gl.glVertex3d(-20, -20, 0);
-        
+
         gl.glNormal3d(0, 1, 0);
-        
+
         gl.glVertex3d(-20, 20, 0);
         gl.glVertex3d(20, 20, 0);
         gl.glVertex3d(20, 20, -1);
         gl.glVertex3d(-20, 20, -1);
-        
+
         gl.glNormal3d(1, 0, 0);
-        
+
         gl.glVertex3d(20, 20, 0);
         gl.glVertex3d(20, -20, 0);
         gl.glVertex3d(20, -20, -1);
         gl.glVertex3d(20, 20, -1);
-        
+
         gl.glNormal3d(0, 0, 1);
-        
+
         gl.glVertex3d(20, 20, 0);
         gl.glVertex3d(-20, 20, 0);
         gl.glVertex3d(-20, -20, 0);
         gl.glVertex3d(20, -20, 0);
-        
+
         gl.glEnd();
     }
 
@@ -143,6 +156,17 @@ class Terrain {
         return 0.6d * Math.cos(0.3d * x + 0.2d * y) + 0.4d * Math.cos(x - 0.5d * y);
     }
 
+    /**
+     * <p>Computes a point on the terrain using u and v. Where u and v are limited
+     * to 0 <= u <= 1 and 0 <= v <= 1 </p>
+     * 
+     * <p> First maps u and v to a value between -20 and 20, then uses the 
+     * heightAt function to compute that height at that point of the terrain. 
+     * </p>
+     * @param u A value between and including 0 and 1
+     * @param v A value between and including 0 and 1
+     * @return A point on the terrain at the specified u and v coordinates. 
+     */
     private Vector pointAt(double u, double v) {
 
         double x, y, z;

@@ -46,11 +46,35 @@ public class RobotRace extends Base {
      */
     private static final double ROBOT_INCREASE_PER_MILLISECOND = 1d / 30000d;
     
-    private static final double ANIMATION_TIME_SECONDS = 10;
+    /**
+     * Ensures that the animation value, which runs from 0 to 10 is modified so
+     * that it runs from 0 to 100.
+     */
+    private static final double ANIMATION_TIME_CLAMP = 10;
+    
+    /**
+     * Constant that can be used to speedup or slowdown the speed of the animation. 
+     */
+    private static final double ANIMATION_TIME_MODIFIER = 15;
+    
+    /**
+     * Animation constant, runs from 0 to 10 and is incremented by the time 
+     * passed between scene draw method calls. 
+     */
     private double tAnimSeconds = 0;
 
+    /**
+     * Last time in milliseconds that the scene got updated, this time is used
+     * to calculate the time that passed between scene updates so that the 
+     * animation and robot progress along the track can be calculated.
+     */
     private long lastSceneUpdateTime = System.currentTimeMillis();
+    
+    /**
+     * 
+     */
     private double positionOnTrack;
+    
     /**
      * Array of the four robots.
      */
@@ -175,9 +199,6 @@ public class RobotRace extends Base {
         gl.glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
         gl.glBindTexture(GL_TEXTURE_2D, 0);
 
-        gl.glEnable(GL_BLEND); //Enable blending.
-        gl.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); //Set blending function.
-
         // Try to load four textures, add more if you like.
         track = loadTexture("track.jpg");
         brick = loadTexture("brick.jpg");
@@ -291,7 +312,7 @@ public class RobotRace extends Base {
             positionOnTrack -= 1;
         }
         
-        tAnimSeconds += (System.currentTimeMillis() - lastSceneUpdateTime)/1000d;
+        tAnimSeconds += ((System.currentTimeMillis() - lastSceneUpdateTime)/1000d) * ANIMATION_TIME_MODIFIER;
         
         if(tAnimSeconds >= 10) {
             tAnimSeconds -= 10;
@@ -312,13 +333,11 @@ public class RobotRace extends Base {
         robots[3].direction = raceTracks[gs.trackNr].getLaneTangent(4, positionOnTrack);
         //robots[0].direction = raceTracks[gs.trackNr].getLaneTangent(0, 0);
         // Draw all robots.
-        robots[0].draw(gl, glu, glut, gs.showStick, tAnimSeconds * ANIMATION_TIME_SECONDS);
-        robots[1].draw(gl, glu, glut, gs.showStick, tAnimSeconds * ANIMATION_TIME_SECONDS);
-        robots[2].draw(gl, glu, glut, gs.showStick, tAnimSeconds * ANIMATION_TIME_SECONDS);
-        robots[3].draw(gl, glu, glut, gs.showStick, tAnimSeconds * ANIMATION_TIME_SECONDS);
+        robots[0].draw(gl, glu, glut, gs.showStick, tAnimSeconds * ANIMATION_TIME_CLAMP);
+        robots[1].draw(gl, glu, glut, gs.showStick, tAnimSeconds * ANIMATION_TIME_CLAMP);
+        robots[2].draw(gl, glu, glut, gs.showStick, tAnimSeconds * ANIMATION_TIME_CLAMP);
+        robots[3].draw(gl, glu, glut, gs.showStick, tAnimSeconds * ANIMATION_TIME_CLAMP);
         
-        System.out.println(tAnimSeconds * ANIMATION_TIME_SECONDS);
-
         // Draw the race track.
         raceTracks[gs.trackNr].draw(gl, glu, glut, track, brick);
 

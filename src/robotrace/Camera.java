@@ -23,11 +23,11 @@ class Camera {
     public Vector up = Vector.Z;
     
     private int autoCameraMode;
-    private Random random; 
+    private Random random;    
     private long msSinceLastCameraSwitch;
     private long timeOfLastMethodCall;
-        
-    public Camera () {
+    
+    public Camera() {
         this.random = new Random();
         this.autoCameraMode = 1;
         this.msSinceLastCameraSwitch = 0;
@@ -38,7 +38,7 @@ class Camera {
      * mode.
      */
     public void update(GlobalState gs, Robot focus) {
-
+        
         switch (gs.camMode) {
 
             // Helicopter mode
@@ -87,16 +87,16 @@ class Camera {
      */
     private void setDefaultMode(GlobalState gs) {
         double invertedPhi = Math.PI / 2 - gs.phi;
-
+        
         this.eye = RobotRace.sphericalToCoords(gs.theta, invertedPhi, gs.vDist);
-
+        
         this.center = gs.cnt;
         this.up = Vector.Z;
     }
 
     /**
      * Computes eye, center, and up, based on the helicopter mode. The camera
-     * should focus on the robot. Focuses on the robot from above. 
+     * should focus on the robot. Focuses on the robot from above.
      */
     private void setHelicopterMode(GlobalState gs, Robot focus) {
         this.center = focus.position;
@@ -110,13 +110,12 @@ class Camera {
      */
     private void setMotorCycleMode(GlobalState gs, Robot focus) {
         
-        
         Vector perpToRobot = focus.direction.cross(Vector.Z).normalized();
         
-        this.eye = focus.position.add(perpToRobot.scale(2.1d));
+        this.eye = focus.position.add(perpToRobot.scale(4.5d));
         this.eye.z = focus.position.z + 1.5d;
         
-        this.center = Vector.O;
+        this.center = focus.position.add(new Vector(0, 0, 1.1d));
         this.up = Vector.Z;
     }
 
@@ -140,18 +139,18 @@ class Camera {
     private void setAutoMode(GlobalState gs, Robot focus) {
         msSinceLastCameraSwitch += System.currentTimeMillis() - timeOfLastMethodCall;
         
-        if(msSinceLastCameraSwitch > 3000) {
+        if (msSinceLastCameraSwitch > 3000) {
             this.autoCameraMode = random.nextInt(3) + 1;
             msSinceLastCameraSwitch = 0;            
         }        
         
-        switch(this.autoCameraMode) {
+        switch (this.autoCameraMode) {
             case 1:
                 this.setHelicopterMode(gs, focus);
                 break;
             case 2:
                 this.setMotorCycleMode(gs, focus);
-                               break;
+                break;
             case 3:
                 this.setFirstPersonMode(gs, focus);
                 break;
@@ -159,5 +158,5 @@ class Camera {
         
         timeOfLastMethodCall = System.currentTimeMillis();
     }
-
+    
 }

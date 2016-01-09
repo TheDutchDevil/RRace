@@ -14,8 +14,7 @@ import jogamp.graph.curve.tess.HEdge;
  *
  * All constant values in this class are specified in meters.
  */
-class Robot
-{
+class Robot {
 
     /**
      * Size of the robot in meters, all other constant size values of the robot
@@ -26,34 +25,34 @@ class Robot
     /**
      * Skin like color (between red and yellow) for the limbs and ears.
      */
-    private static final float[] LIMB_COLOR =
-    {
-        254f / 255f, 179f / 255f, 129f / 255f
-    };
+    private static final float[] LIMB_COLOR
+            = {
+                254f / 255f, 179f / 255f, 129f / 255f
+            };
 
     /**
      * Dark black like color used in the soles of the shoes.
      */
-    private static final float[] SOLE_COLOR =
-    {
-        50f / 255f, 50f / 255f, 50f / 255f
-    };
+    private static final float[] SOLE_COLOR
+            = {
+                50f / 255f, 50f / 255f, 50f / 255f
+            };
 
     /**
      * Metallic like color used in the head of the robot.
      */
-    private static final float[] ROBOT_HEAD_COLOR =
-    {
-        160f / 255f, 160f / 255f, 160f / 255f
-    };
+    private static final float[] ROBOT_HEAD_COLOR
+            = {
+                160f / 255f, 160f / 255f, 160f / 255f
+            };
 
     /**
      * Color of the hair, dark red.
      */
-    private static final float[] ROBOT_HAIR_COLOR =
-    {
-        154f / 255f, 54f / 255f, 5f / 255f
-    };
+    private static final float[] ROBOT_HAIR_COLOR
+            = {
+                154f / 255f, 54f / 255f, 5f / 255f
+            };
 
     /**
      * Radius of a joint of the stick figure skeleton.
@@ -121,11 +120,6 @@ class Robot
     private static final double SKELETON_JAW_TO_HAIR_HEIGHT = .15 * SIZE;
 
     /**
-     * Height of the shoulder bone from the feet of the robot.
-     */
-    private static final double SHOULDER_JOINT_HEIGHT = .65 * SIZE;
-
-    /**
      * Angle between the upper arm and head.
      */
     private static final double ANGLE_BETWEEN_Y_AND_UPPER_ARM = 135;
@@ -166,12 +160,6 @@ class Robot
     private static final double TORSO_HEIGHT = .35 * SIZE;
 
     /**
-     * Height of the top of the robot shoulders, which is slightly above the
-     * shoulder joints.
-     */
-    private static final double SHOULDER_HEIGHT = SHOULDER_JOINT_HEIGHT + .025 * SIZE;
-
-    /**
      * Radius at the top of the torso.
      */
     private static final double UPPER_TORSO_RADIUS = 0.1 * SIZE;
@@ -208,8 +196,7 @@ class Robot
 
     /**
      * Angle between the left lower leg and upper leg, used in the calculation
-     * for
-     * the animation.
+     * for the animation.
      */
     private double alpha;
 
@@ -219,9 +206,8 @@ class Robot
     private double beta;
 
     /**
-     * Due to the fact that a robot has two legs it doesn't explaining that the
-     * right leg is leading if this is false. Leading leg is the leg that is
-     * on the ground during the walking animation.
+     * Leading leg is the leg that is on the ground during the walking
+     * animation.
      */
     private boolean leftLegIsLeading;
 
@@ -230,28 +216,83 @@ class Robot
      */
     private boolean leftLegIsFrontLeg;
 
+    /**
+     * Height of the hip, this value is calculated each time that the draw
+     * method is called because it depends on the tAnim value.
+     */
     private double hipheight;
+
+    /**
+     * Height of the shoulder joint based on the value of tAnim after draw is
+     * called.
+     */
+    private double shoulderJointHeight;
+
+    /**
+     * Height of the top of the robot shoulders, which is slightly above the
+     * shoulder joints. Based on the value of tAnim.
+     */
+    private double shoulderHeight;
 
     /**
      * Constructs the robot with initial parameters.
      */
-    public Robot(Material material, Vector position)
-    {
+    public Robot(Material material, Vector position) {
         this.material = material;
         this.position = position;
     }
 
-    private void calculateAnimValues()
-    {
-
-        if (leftLegIsLeading)
-        {
-            hipheight = SKELETON_LOWER_LEG_HEIGHT + Math.cos(Math.toRadians(180 - alpha)) * SKELETON_UPPER_LEG_HEIGHT + ANKLE_HEIGHT;
+    /**
+     * Calculates several values used in the animation that are dependent on
+     * time during the animation. The main part of the calculation are the
+     * angles alpha and beta, these are the angles between the upper and lower
+     * leg of both legs.
+     *
+     * The animation is divided into four parts, half of it is when the right
+     * leg makes a step forward and half of it for when the left leg makes a
+     * step forward. Those two parts are further subdivided into two parts each
+     * where either the left leg is in front of the right leg or the right leg
+     * is in front of the left leg.
+     *
+     * Based on the values calculated for alpha and beta a new hip and shoulder
+     * height is calculated. So that the upper body moves up and down based on
+     * the position of the legs.
+     *
+     * @param tAnim Value from 0 to 100 signifying how far along the animation
+     * is. 0 is the start, 100 is the end.
+     */
+    private void calculateAnimValues(double tAnim) {
+        if (tAnim <= 25) {
+            alpha = 180d - (45d * tAnim) / 25d;
+            beta = 135 + 0.075d * Math.pow(tAnim - 25d, 2);
+            leftLegIsLeading = true;
+            leftLegIsFrontLeg = false;
+        } else if (tAnim <= 50) {
+            alpha = 135 + 0.075d * Math.pow(tAnim - 25d, 2);
+            beta = 135 + (45 / 25d) * (tAnim - 25d);
+            leftLegIsLeading = false;
+            leftLegIsFrontLeg = false;
+        } else if (tAnim <= 75) {
+            alpha = 135 + 0.075d * Math.pow(tAnim - 75d, 2);
+            beta = 180d - (45d * (tAnim - 50)) / 25d;
+            leftLegIsLeading = false;
+            leftLegIsFrontLeg = true;
+        } else {
+            alpha = 135 + (45 / 25d) * (tAnim - 75d);
+            beta = 135 + 0.075d * Math.pow(tAnim - 75d, 2);
+            leftLegIsLeading = true;
+            leftLegIsFrontLeg = true;
         }
-        else
-        {
+
+        if (leftLegIsLeading) {
+            hipheight = SKELETON_LOWER_LEG_HEIGHT + Math.cos(Math.toRadians(180 - alpha)) * SKELETON_UPPER_LEG_HEIGHT + ANKLE_HEIGHT;
+        } else {
             hipheight = SKELETON_LOWER_LEG_HEIGHT + Math.cos(Math.toRadians(180 - beta)) * SKELETON_UPPER_LEG_HEIGHT + ANKLE_HEIGHT;
         }
+
+        shoulderJointHeight = hipheight + SKELETON_BACKBONE_LENGTH;
+        shoulderHeight = shoulderJointHeight + .025 * SIZE;
+
     }
 
     /**
@@ -261,39 +302,8 @@ class Robot
      * stickFigure is true the drawStickFigure method is called. Otherwise the
      * robot proper is drawn by calling drawRobot.</p>
      */
-    public void draw(GL2 gl, GLU glu, GLUT glut, boolean stickFigure, double tAnim)
-    {
-
-        if (tAnim <= 25)
-        {
-            alpha = 180d - (45d * tAnim) / 25d;
-            beta = 135 + 0.075d * Math.pow(tAnim - 25d, 2);
-            leftLegIsLeading = true;
-            leftLegIsFrontLeg = false;
-        }
-        else if (tAnim <= 50)
-        {
-            alpha = 135 + 0.075d * Math.pow(tAnim - 25d, 2);
-            beta = 135 + (45 / 25d) * (tAnim - 25d);
-            leftLegIsLeading = false;
-            leftLegIsFrontLeg = false;
-        }
-        else if (tAnim <= 75)
-        {
-            alpha = 135 + 0.075d * Math.pow(tAnim - 75d, 2);
-            beta = 180d - (45d * (tAnim - 50)) / 25d;
-            leftLegIsLeading = false;
-            leftLegIsFrontLeg = true;
-        }
-        else
-        {
-            alpha = 135 + (45 / 25d) * (tAnim - 75d);
-            beta = 135 + 0.075d * Math.pow(tAnim - 75d, 2);
-            leftLegIsLeading = true;
-            leftLegIsFrontLeg = true;
-        }
-
-        calculateAnimValues();
+    public void draw(GL2 gl, GLU glu, GLUT glut, boolean stickFigure, double tAnim) {
+        calculateAnimValues(tAnim);
 
         gl.glPushMatrix();
 
@@ -306,16 +316,13 @@ class Robot
 
         gl.glRotated((-Math.toDegrees(Math.atan(direction.x / direction.y))) + additonalAngle, 0, 0, 1); //TODO
 
-        if (stickFigure)
-        {
+        if (stickFigure) {
             /**
              * Sets the color to green for the stick figure.
              */
             gl.glColor3ub((byte) 0, (byte) 255, (byte) 0);
             drawStickFigure(gl, glu, glut);
-        }
-        else
-        {
+        } else {
             drawRobot(gl, glu, glut);
         }
 
@@ -329,8 +336,7 @@ class Robot
      * parts. These methods can be called in any order since they all expect the
      * reference frame to be at the origin of the robot.
      */
-    private void drawRobot(GL2 gl, GLU glu, GLUT glut)
-    {
+    private void drawRobot(GL2 gl, GLU glu, GLUT glut) {
         drawRobotLeg(gl, glu, glut, true);
         drawRobotLeg(gl, glu, glut, false);
         drawUpperBody(gl, glu, glut);
@@ -350,36 +356,101 @@ class Robot
      * in more detail, the lower and upper leg consist out of a cylinder.
      *
      * @param leftLeg Draws the left leg when true, otherwise it draws the right
-     *                leg.
+     * leg.
      */
-    private void drawRobotLeg(GL2 gl, GLU glu, GLUT glut, boolean leftLeg)
-    {
+    private void drawRobotLeg(GL2 gl, GLU glu, GLUT glut, boolean leftLeg) {
         gl.glPushMatrix();
-
-        setRobotMaterialColor(gl);
 
         double translationOverXAxis = leftLeg ? -1 * DISTANCE_BETWEEN_LEG_AND_X_AXIS
                 : DISTANCE_BETWEEN_LEG_AND_X_AXIS;
 
-        gl.glTranslated(translationOverXAxis, 0, 0);
+        gl.glTranslated(translationOverXAxis, 0, hipheight);
 
-        drawShoe(gl, glu, glut, SIZE * .025);
-
-        setRobotMaterialColor(gl);
-
-        drawAnkle(gl, glu, glut);
+        gl.glRotated(180, 0, 1, 0);
 
         unsetSpecularMaterialValues(gl);
 
-        gl.glTranslated(0, 0, SHOE_HEIGHT + ANKLE_HEIGHT);
-
         gl.glColor3fv(LIMB_COLOR, 0);
+
+        if (!leftLegIsFrontLeg) {
+            if (leftLegIsLeading) {
+                if (!leftLeg) {
+                    gl.glRotated(180 + beta, 1, 0, 0);
+                }
+            } else if (!leftLeg) {
+                gl.glRotated(180 + beta, 1, 0, 0);
+            }
+        } else if (leftLegIsLeading) {
+            if (leftLeg) {
+                gl.glRotated(180 + alpha, 1, 0, 0);
+            }
+        } else if (leftLeg) {
+            gl.glRotated(180 + alpha, 1, 0, 0);
+        }
+
+        glut.glutSolidCylinder(ROBOT_LIMB_RADIUS, SKELETON_UPPER_LEG_HEIGHT, 16, 16);
+
+        gl.glTranslated(0, 0, SKELETON_UPPER_LEG_HEIGHT);
+
+        if (!leftLegIsFrontLeg) {
+            if (leftLegIsLeading) {
+                if (leftLeg) {
+                    gl.glRotated(180 - alpha, 1, 0, 0);
+                } else {
+                    gl.glRotated(-beta + 180, 1, 0, 0);
+                }
+            } else if (leftLeg) {
+                gl.glRotated(180 - alpha, 1, 0, 0);
+            } else {
+                gl.glRotated(-beta + 180, 1, 0, 0);
+            }
+        } else if (leftLegIsLeading) {
+            if (!leftLeg) {
+                gl.glRotated(180 - beta, 1, 0, 0);
+            } else {
+                gl.glRotated(-alpha + 180, 1, 0, 0);
+            }
+        } else if (!leftLeg) {
+            gl.glRotated(180 - beta, 1, 0, 0);
+        } else {
+            gl.glRotated(-alpha + 180, 1, 0, 0);
+        }
 
         glut.glutSolidCylinder(ROBOT_LIMB_RADIUS, 0.1 * SIZE, 16, 16);
 
         gl.glTranslated(0, 0, .1 * SIZE);
 
-        glut.glutSolidCylinder(ROBOT_LIMB_RADIUS, .15 * SIZE, 16, 16);
+        if (!leftLegIsFrontLeg) {
+            if (leftLegIsLeading) {
+                if (leftLeg) {
+                    gl.glRotated(alpha, 1, 0, 0);
+                }
+            } else if (leftLeg) {
+                gl.glRotated(alpha, 1, 0, 0);
+            }
+        } else if (leftLegIsLeading) {
+            if (!leftLeg) {
+                gl.glRotated(beta, 1, 0, 0);
+            }
+        } else if (!leftLeg) {
+            gl.glRotated(beta, 1, 0, 0);
+        }
+
+        setRobotMaterialColor(gl);
+
+        if (leftLeg && leftLegIsFrontLeg || !leftLeg && !leftLegIsFrontLeg) {
+            gl.glRotated(180, 0, 1, 0);
+        } else {
+            
+        }
+
+        gl.glTranslated(0, 0, -(SHOE_HEIGHT + ANKLE_HEIGHT));
+
+        drawShoe(gl, glu, glut, SIZE * .025);
+
+        drawAnkle(gl, glu, glut);
+
+        unsetSpecularMaterialValues(gl);
 
         gl.glPopMatrix();
     }
@@ -388,8 +459,7 @@ class Robot
      * Draws the stick figure. Each method draws a specific version of the
      * stickfigure. Order of drawing the elements is not important.
      */
-    private void drawStickFigure(GL2 gl, GLU glu, GLUT glut)
-    {
+    private void drawStickFigure(GL2 gl, GLU glu, GLUT glut) {
         drawStickLeg(gl, glu, glut, true);
         drawStickLeg(gl, glu, glut, false);
         drawStickBody(gl, glu, glut);
@@ -407,13 +477,10 @@ class Robot
      * skeleton. </p>
      *
      * @param leftSide Whether this stick leg is the left leg of the stick
-     *                 figure. If this value is false it assumed it is the right leg.
+     * figure. If this value is false it assumed it is the right leg.
      */
-    private void drawStickLeg(GL2 gl, GLU glu, GLUT glut, boolean leftLeg)
-    {
+    private void drawStickLeg(GL2 gl, GLU glu, GLUT glut, boolean leftLeg) {
         gl.glPushMatrix();
-
-        boolean isFrontLeg = leftLeg && leftLegIsFrontLeg || !leftLeg && !leftLegIsFrontLeg;
 
         double translationOverXAxis = leftLeg ? -1 * DISTANCE_BETWEEN_LEG_AND_X_AXIS
                 : DISTANCE_BETWEEN_LEG_AND_X_AXIS;
@@ -424,94 +491,48 @@ class Robot
 
         glut.glutSolidSphere(SKELETON_JOINT_RADIUS, 16, 16);
 
-        if (!leftLegIsFrontLeg)
-        {
-            if (leftLegIsLeading)
-            {
-                if (!leftLeg)
-                {
+        if (!leftLegIsFrontLeg) {
+            if (leftLegIsLeading) {
+                if (!leftLeg) {
                     gl.glRotated(180 + beta, 1, 0, 0);
                 }
+            } else if (!leftLeg) {
+                gl.glRotated(180 + beta, 1, 0, 0);
             }
-            else
-            {
-                if (!leftLeg)
-                {
-                    gl.glRotated(180 + beta, 1, 0, 0);
-                }
+        } else if (leftLegIsLeading) {
+            if (leftLeg) {
+                gl.glRotated(180 + alpha, 1, 0, 0);
             }
-        }
-        else
-        {
-            if (leftLegIsLeading)
-            {
-                if (leftLeg)
-                {
-                    gl.glRotated(180 + alpha, 1, 0, 0);
-                }
-            }
-            else
-            {
-                if (leftLeg)
-                {
-                    gl.glRotated(180 + alpha, 1, 0, 0);
-                }
-            }
+        } else if (leftLeg) {
+            gl.glRotated(180 + alpha, 1, 0, 0);
         }
 
         glut.glutSolidCylinder(SKELETON_LIMB_RADIUS, SKELETON_UPPER_LEG_HEIGHT, 16, 16);
 
         gl.glTranslated(0, 0, SKELETON_UPPER_LEG_HEIGHT);
 
-        if (!leftLegIsFrontLeg)
-        {
-            if (leftLegIsLeading)
-            {
-                if (leftLeg)
-                {
+        if (!leftLegIsFrontLeg) {
+            if (leftLegIsLeading) {
+                if (leftLeg) {
                     gl.glRotated(180 - alpha, 1, 0, 0);
-                }
-                else
-                {
+                } else {
                     gl.glRotated(-beta + 180, 1, 0, 0);
                 }
+            } else if (leftLeg) {
+                gl.glRotated(180 - alpha, 1, 0, 0);
+            } else {
+                gl.glRotated(-beta + 180, 1, 0, 0);
             }
-            else
-            {
-                if (leftLeg)
-                {
-                    gl.glRotated(180 - alpha, 1, 0, 0);
-                }
-                else
-                {
-                    gl.glRotated(-beta + 180, 1, 0, 0);
-                }
+        } else if (leftLegIsLeading) {
+            if (!leftLeg) {
+                gl.glRotated(180 - beta, 1, 0, 0);
+            } else {
+                gl.glRotated(-alpha + 180, 1, 0, 0);
             }
-        }
-        else
-        {
-            if (leftLegIsLeading)
-            {
-                if (!leftLeg)
-                {
-                    gl.glRotated(180 - beta, 1, 0, 0);
-                }
-                else
-                {
-                    gl.glRotated(-alpha + 180, 1, 0, 0);
-                }
-            }
-            else
-            {
-                if (!leftLeg)
-                {
-                    gl.glRotated(180 - beta, 1, 0, 0);
-                }
-                else
-                {
-                    gl.glRotated(-alpha + 180, 1, 0, 0);
-                }
-            }
+        } else if (!leftLeg) {
+            gl.glRotated(180 - beta, 1, 0, 0);
+        } else {
+            gl.glRotated(-alpha + 180, 1, 0, 0);
         }
 
         glut.glutSolidSphere(SKELETON_JOINT_RADIUS, 16, 16);
@@ -520,38 +541,20 @@ class Robot
 
         gl.glTranslated(0, 0, SKELETON_LOWER_LEG_HEIGHT);
 
-        if (!leftLegIsFrontLeg)
-        {
-            if (leftLegIsLeading)
-            {
-                if (leftLeg)
-                {
+        if (!leftLegIsFrontLeg) {
+            if (leftLegIsLeading) {
+                if (leftLeg) {
                     gl.glRotated(alpha, 1, 0, 0);
                 }
+            } else if (leftLeg) {
+                gl.glRotated(alpha, 1, 0, 0);
             }
-            else
-            {
-                if (leftLeg)
-                {
-                    gl.glRotated(alpha, 1, 0, 0);
-                }
+        } else if (leftLegIsLeading) {
+            if (!leftLeg) {
+                gl.glRotated(beta, 1, 0, 0);
             }
-        }
-        else {
-            if (leftLegIsLeading)
-            {
-                if (!leftLeg)
-                {
-                    gl.glRotated(beta, 1, 0, 0);
-                }
-            }
-            else
-            {
-                if (!leftLeg)
-                {
-                    gl.glRotated(beta, 1, 0, 0);
-                }
-            }
+        } else if (!leftLeg) {
+            gl.glRotated(beta, 1, 0, 0);
         }
 
         glut.glutSolidSphere(SKELETON_JOINT_RADIUS, 16, 16);
@@ -572,8 +575,7 @@ class Robot
      * wrapped in curly braces to make it clear which rotation and translation
      * are used for which skeleton parts.</p>
      */
-    private void drawStickBody(GL2 gl, GLU glu, GLUT glut)
-    {
+    private void drawStickBody(GL2 gl, GLU glu, GLUT glut) {
         gl.glPushMatrix();
         {
 
@@ -622,15 +624,14 @@ class Robot
      * draw the two arm skeletons and elbow and wrist joint. </p>
      *
      * @param leftArm Based on the value of this variable either the left or
-     *                right arm is drawn.
+     * right arm is drawn.
      */
-    private void drawStickArm(GL2 gl, GLU glu, GLUT glut, boolean leftArm)
-    {
+    private void drawStickArm(GL2 gl, GLU glu, GLUT glut, boolean leftArm) {
         gl.glPushMatrix();
 
         double xAxisTranslation = leftArm ? -DISTANCE_BETWEEN_SHOUDLER_AND_X_AXIS : DISTANCE_BETWEEN_SHOUDLER_AND_X_AXIS;
 
-        gl.glTranslated(xAxisTranslation, 0, SHOULDER_JOINT_HEIGHT);
+        gl.glTranslated(xAxisTranslation, 0, shoulderJointHeight);
 
         double upperArmRotation = leftArm ? -ANGLE_BETWEEN_Y_AND_UPPER_ARM : ANGLE_BETWEEN_Y_AND_UPPER_ARM;
 
@@ -668,11 +669,10 @@ class Robot
      * </p>
      *
      */
-    private void drawStickHead(GL2 gl, GLU glu, GLUT glut)
-    {
+    private void drawStickHead(GL2 gl, GLU glu, GLUT glut) {
         gl.glPushMatrix();
 
-        gl.glTranslated(0, 0, SHOULDER_JOINT_HEIGHT);
+        gl.glTranslated(0, 0, shoulderJointHeight);
 
         glut.glutSolidCylinder(SKELETON_LIMB_RADIUS, SKELETON_NECK_BONE_LENGTH, 16, 16);
 
@@ -710,8 +710,7 @@ class Robot
      * out of a cylinder drawn from the base of the foot to the height of the
      * ankle.
      */
-    private void drawAnkle(GL2 gl, GLU glu, GLUT glut)
-    {
+    private void drawAnkle(GL2 gl, GLU glu, GLUT glut) {
         glut.glutSolidCylinder(ANKLE_RADIUS, SHOE_HEIGHT + ANKLE_HEIGHT, 16, 16);
     }
 
@@ -737,8 +736,7 @@ class Robot
      * without any specular reflection. This represents the sole of the shoe.
      * </p>
      */
-    private void drawShoe(GL2 gl, GLU glu, GLUT glut, double maxRadius)
-    {
+    private void drawShoe(GL2 gl, GLU glu, GLUT glut, double maxRadius) {
 
         gl.glPushMatrix();
 
@@ -750,11 +748,9 @@ class Robot
         final double subdivionHeight = SHOE_HEIGHT * (1d / nrDivisions);
         final double step = maxRadius / Math.sqrt(nrDivisions);
 
-        for (int i = 1; i <= nrDivisions; i++)
-        {
+        for (int i = 1; i <= nrDivisions; i++) {
 
-            if (i == nrDivisions - 1)
-            {
+            if (i == nrDivisions - 1) {
                 gl.glColor3fv(SOLE_COLOR, 0);
                 unsetSpecularMaterialValues(gl);
             }
@@ -773,13 +769,12 @@ class Robot
      * drawSolidCup method. To ensure a torso shape the torso is scaled .666 in
      * the y axis. To make it wider than that the body is thick.
      */
-    private void drawUpperBody(GL2 gl, GLU glu, GLUT glut)
-    {
+    private void drawUpperBody(GL2 gl, GLU glu, GLUT glut) {
         gl.glPushMatrix();
 
         setRobotMaterialColor(gl);
 
-        gl.glTranslated(0, 0, SHOULDER_HEIGHT);
+        gl.glTranslated(0, 0, shoulderHeight);
 
         gl.glScaled(1, .666, 1);
 
@@ -800,19 +795,17 @@ class Robot
      * was when the method was called.</p>
      *
      * @param bottomRadius The bottom (and generally wider) radius of the cup.
-     * @param upperRadius  The upper (and generally lower) radius of the cup.
-     * @param height       Total height of the cup in meters.
+     * @param upperRadius The upper (and generally lower) radius of the cup.
+     * @param height Total height of the cup in meters.
      */
-    private void drawSolidCup(GL2 gl, GLU glu, GLUT glut, double bottomRadius, double upperRadius, double height)
-    {
+    private void drawSolidCup(GL2 gl, GLU glu, GLUT glut, double bottomRadius, double upperRadius, double height) {
         gl.glPushMatrix();
 
         final int nrDivisions = 20;
         final double subdivisionHeight = height / nrDivisions;
         final double step = (bottomRadius - upperRadius) / nrDivisions;
 
-        for (int i = 0; i < nrDivisions; i++)
-        {
+        for (int i = 0; i < nrDivisions; i++) {
             gl.glTranslated(0, 0, -subdivisionHeight);
             glut.glutSolidCylinder(upperRadius + step * i, subdivisionHeight, 16, 16);
         }
@@ -838,8 +831,7 @@ class Robot
      * From the center of the sphere it draws three cones with a different
      * rotation and different length.</p>
      */
-    private void drawRobotHair(GL2 gl, GLU glu, GLUT glut)
-    {
+    private void drawRobotHair(GL2 gl, GLU glu, GLUT glut) {
         gl.glPushMatrix();
 
         gl.glColor3fv(ROBOT_HAIR_COLOR, 0);
@@ -854,8 +846,7 @@ class Robot
         hairStrands.add(new Vector(30, 15, .08 * SIZE));
         hairStrands.add(new Vector(20, -35, 0.1 * SIZE));
 
-        for (Vector hair : hairStrands)
-        {
+        for (Vector hair : hairStrands) {
             gl.glPushMatrix();
 
             gl.glRotated(hair.x, 1, 0, 0);
@@ -877,16 +868,15 @@ class Robot
      * arm. </p>
      *
      * @param leftArm Whether the left arm should be drawn. If this is false the
-     *                right arm is drawn.
+     * right arm is drawn.
      */
-    private void drawRobotArm(GL2 gl, GLU glu, GLUT glut, boolean leftArm)
-    {
+    private void drawRobotArm(GL2 gl, GLU glu, GLUT glut, boolean leftArm) {
         gl.glPushMatrix();
 
         double xTranslation = leftArm ? -DISTANCE_BETWEEN_SHOUDLER_AND_X_AXIS : DISTANCE_BETWEEN_SHOUDLER_AND_X_AXIS;
         double armRotation = leftArm ? 45 : -45;
 
-        gl.glTranslated(xTranslation, 0, SHOULDER_JOINT_HEIGHT);
+        gl.glTranslated(xTranslation, 0, shoulderJointHeight);
 
         gl.glRotated(armRotation, 0, 1, 0);
 
@@ -924,11 +914,10 @@ class Robot
      * drawn and below that the red part representing the mouth is drawn.
      *
      */
-    private void drawRobotHead(GL2 gl, GLU glu, GLUT glut)
-    {
+    private void drawRobotHead(GL2 gl, GLU glu, GLUT glut) {
         gl.glPushMatrix();
 
-        gl.glTranslated(0, 0, SHOULDER_HEIGHT);
+        gl.glTranslated(0, 0, shoulderHeight);
 
         glut.glutSolidCylinder(ROBOT_LIMB_RADIUS, NECK_LENGTH, 16, 16);
 
@@ -994,8 +983,7 @@ class Robot
      *
      * @param leftEar Draws the leftear if true, otherwise draws the right ear.
      */
-    private void drawEar(GL2 gl, GLU glu, GLUT glut, boolean leftEar)
-    {
+    private void drawEar(GL2 gl, GLU glu, GLUT glut, boolean leftEar) {
         double translationXAxis = leftEar ? -0.125 * SIZE : .125 * SIZE;
         double rotationYAxis = leftEar ? -90 : 90;
 
@@ -1023,10 +1011,9 @@ class Robot
      * a half sphere.
      *
      * @param leftEye Draws the left eye when true, otherwise it draws the right
-     *                eye.
+     * eye.
      */
-    private void drawEye(GL2 gl, GLU glu, GLUT glut, boolean leftEye)
-    {
+    private void drawEye(GL2 gl, GLU glu, GLUT glut, boolean leftEye) {
         double translationXAxis = leftEye ? -.04 * SIZE : .04 * SIZE;
         double rotationXAxis = -90;
 
@@ -1058,8 +1045,7 @@ class Robot
      * Sets the color, specular color and specular intensity of the robot's own
      * color.
      */
-    private void setRobotMaterialColor(GL2 gl)
-    {
+    private void setRobotMaterialColor(GL2 gl) {
         gl.glColor3f(material.diffuse[0], material.diffuse[1], material.diffuse[2]);
         gl.glMaterialfv(GL.GL_FRONT, GLLightingFunc.GL_SPECULAR, material.specular, 0);
         gl.glMaterialf(GL.GL_FRONT_AND_BACK, GLLightingFunc.GL_SHININESS, material.shininess);
@@ -1071,10 +1057,8 @@ class Robot
      *
      * @param gl
      */
-    private void unsetSpecularMaterialValues(GL2 gl)
-    {
-        gl.glMaterialfv(GL.GL_FRONT, GLLightingFunc.GL_SPECULAR, new float[]
-        {
+    private void unsetSpecularMaterialValues(GL2 gl) {
+        gl.glMaterialfv(GL.GL_FRONT, GLLightingFunc.GL_SPECULAR, new float[]{
             0, 0, 0
         }, 0);
         gl.glMaterialf(GL.GL_FRONT_AND_BACK, GLLightingFunc.GL_SHININESS, 0);
