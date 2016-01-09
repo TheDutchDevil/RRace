@@ -45,8 +45,11 @@ public class RobotRace extends Base {
      * Each lap should take 30 seconds.
      */
     private static final double ROBOT_INCREASE_PER_MILLISECOND = 1d / 30000d;
+    
+    private static final double ANIMATION_TIME_SECONDS = 10;
+    private double tAnimSeconds = 0;
 
-    private long lastSceneUpdateTime;
+    private long lastSceneUpdateTime = System.currentTimeMillis();
     private double positionOnTrack;
     /**
      * Array of the four robots.
@@ -195,7 +198,7 @@ public class RobotRace extends Base {
         gs.theta = (float) Math.PI / 4f;
         gs.phi = (float) Math.PI / 3f;
 
-        gs.vDist = 7;
+        gs.vDist = 21;
     }
 
     /**
@@ -287,7 +290,14 @@ public class RobotRace extends Base {
         if (positionOnTrack >= 1) {
             positionOnTrack -= 1;
         }
-
+        
+        tAnimSeconds += (System.currentTimeMillis() - lastSceneUpdateTime)/1000d;
+        
+        if(tAnimSeconds >= 10) {
+            tAnimSeconds -= 10;
+        }
+        
+               
         lastSceneUpdateTime = System.currentTimeMillis();
 
         // Get the position and direction of the first robot.
@@ -302,10 +312,12 @@ public class RobotRace extends Base {
         robots[3].direction = raceTracks[gs.trackNr].getLaneTangent(4, positionOnTrack);
         //robots[0].direction = raceTracks[gs.trackNr].getLaneTangent(0, 0);
         // Draw all robots.
-        robots[0].draw(gl, glu, glut, gs.showStick, gs.tAnim);
-        robots[1].draw(gl, glu, glut, gs.showStick, gs.tAnim);
-        robots[2].draw(gl, glu, glut, gs.showStick, gs.tAnim);
-        robots[3].draw(gl, glu, glut, gs.showStick, gs.tAnim);
+        robots[0].draw(gl, glu, glut, gs.showStick, tAnimSeconds * ANIMATION_TIME_SECONDS);
+        robots[1].draw(gl, glu, glut, gs.showStick, tAnimSeconds * ANIMATION_TIME_SECONDS);
+        robots[2].draw(gl, glu, glut, gs.showStick, tAnimSeconds * ANIMATION_TIME_SECONDS);
+        robots[3].draw(gl, glu, glut, gs.showStick, tAnimSeconds * ANIMATION_TIME_SECONDS);
+        
+        System.out.println(tAnimSeconds * ANIMATION_TIME_SECONDS);
 
         // Draw the race track.
         raceTracks[gs.trackNr].draw(gl, glu, glut, track, brick);
