@@ -100,30 +100,29 @@ public class RobotRace extends Base {
 
         // O-track
         raceTracks[1] = new RaceTrack(new Vector[]{
-            new Vector(0, -15, 1), new Vector(12, -15, 1),
-            new Vector(12, 15d, 1), new Vector(0, 15, 1),
-            new Vector(-12, 15d, 1), new Vector(-12, -15d, 1),
-            new Vector(0, -15, 1)
+            new Vector(0, -15, 1),
+            new Vector(12, -15, 1), new Vector(12, 15d, 1), new Vector(0, 15, 1),
+            new Vector(-12, 15d, 1), new Vector(-12, -15d, 1), new Vector(0, -15, 1)
         });
 
         // L-track
         raceTracks[2] = new RaceTrack(new Vector[]{
             new Vector(-8, 8, 1),
-            new Vector(-8, 16, 1), new Vector(0, 16, 1), new Vector(0, 8, 1),
-            new Vector(0, 2d, 1), new Vector(2d, 0, 1), new Vector(8, 0, 1),
-            new Vector(16, 0, 1), new Vector(16, -8, 1), new Vector(8, -8, 1),
-            new Vector(2d, -8, 1), new Vector(0, -8, 1), new Vector(-4, -6, 1),
-            new Vector(-8, -4, 1), new Vector(-8, 2d, 1), new Vector(-8, 8, 1)
+            new Vector(-8, 2d, 1), new Vector(-8, -4, 1), new Vector(-4, -6, 1),
+            new Vector(0, -8, 1), new Vector(2d, -8, 1), new Vector(8, -8, 1),
+            new Vector(16, -8, 1), new Vector(16, 0, 1), new Vector(8, 0, 1),
+            new Vector(2d, 0, 1), new Vector(0, 2d, 1), new Vector(0, 8, 1),
+            new Vector(0, 16, 1), new Vector(-8, 16, 1), new Vector(-8, 8, 1)
         });
 
         // C-track
         raceTracks[3] = new RaceTrack(new Vector[]{
             new Vector(4, 12, 1),
-            new Vector(10, 12, 1), new Vector(10, 4, 1), new Vector(4, 4, 1),
-            new Vector(-4, 4, 1), new Vector(-4, -4, 1), new Vector(4, -4, 1),
-            new Vector(10, -4, 1), new Vector(10, -12, 1), new Vector(4, -12, 1),
-            new Vector(-8, -12, 1), new Vector(-12, -8, 1), new Vector(-12, 0, 1),
-            new Vector(-12, 8, 1), new Vector(-8, 12, 1), new Vector(4, 12, 1)
+            new Vector(-8, 12, 1), new Vector(-12, 8, 1), new Vector(-12, 0, 1),
+            new Vector(-12, -8, 1), new Vector(-8, -12, 1), new Vector(4, -12, 1),
+            new Vector(10, -12, 1), new Vector(10, -4, 1), new Vector(4, -4, 1),
+            new Vector(-4, -4, 1), new Vector(-4, 4, 1), new Vector(4, 4, 1),
+            new Vector(10, 4, 1), new Vector(10, 12, 1), new Vector(4, 12, 1)
         });
 
         // an 8-track

@@ -109,9 +109,11 @@ class Camera {
      * should focus on the robot.
      */
     private void setMotorCycleMode(GlobalState gs, Robot focus) {
-        Vector vecToXYRobot = new Vector(focus.position.x, focus.position.y, 0);
         
-        this.eye = vecToXYRobot.scale(1.4d);
+        
+        Vector perpToRobot = focus.direction.cross(Vector.Z).normalized();
+        
+        this.eye = focus.position.add(perpToRobot.scale(2.1d));
         this.eye.z = focus.position.z + 1.5d;
         
         this.center = Vector.O;

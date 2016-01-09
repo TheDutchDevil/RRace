@@ -71,15 +71,6 @@ public class RaceTrack {
      * a is the lane, starting from 1 (innermost) to 4 (outermost).
      */
     public Vector getLanePoint(int lane, double t) {
-<<<<<<< HEAD
-
-        Vector point = getPoint(t);
-        Vector tangent = getTangent(t);
-
-        Vector perpendicular = tangent.cross(Vector.Z).normalized();
-
-        return point.add(perpendicular.scale(-2.5 * LANE_WIDTH + lane * LANE_WIDTH));
-=======
         Vector point, tangent;
         
         if (null == controlPoints) {
@@ -95,7 +86,6 @@ public class RaceTrack {
         
         
         return point.add(perpendicular.scale(-2.5 * LANE_WIDTH + lane*LANE_WIDTH));
->>>>>>> 96bd2540c64193148016d907c90f0b42f9c37c09
     }
 
     /**
