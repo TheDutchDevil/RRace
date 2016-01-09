@@ -206,9 +206,16 @@ class Robot {
     private double beta;
 
     /**
+     * Angle between the z-as and upper arm.
+     */    
+    private double gamma;
+    
+    /**
      * Leading leg is the leg that is on the ground during the walking
      * animation.
      */
+    
+    
     private boolean leftLegIsLeading;
 
     /**
@@ -248,6 +255,9 @@ class Robot {
      * angles alpha and beta, these are the angles between the upper and lower
      * leg of both legs.
      *
+     * gamma is also calculate this is the angle between the z-as and the upper
+     * arm. This will go linearly form 0 to 45.
+     * 
      * The animation is divided into four parts, half of it is when the right
      * leg makes a step forward and half of it for when the left leg makes a
      * step forward. Those two parts are further subdivided into two parts each
@@ -265,21 +275,25 @@ class Robot {
         if (tAnim <= 25) {
             alpha = 180d - (45d * tAnim) / 25d;
             beta = 135 + 0.075d * Math.pow(tAnim - 25d, 2);
+            gamma = (45d * tAnim) / 50d;
             leftLegIsLeading = true;
             leftLegIsFrontLeg = false;
         } else if (tAnim <= 50) {
             alpha = 135 + 0.075d * Math.pow(tAnim - 25d, 2);
             beta = 135 + (45 / 25d) * (tAnim - 25d);
+            gamma = (45d * (tAnim)) / 50d;
             leftLegIsLeading = false;
             leftLegIsFrontLeg = false;
         } else if (tAnim <= 75) {
             alpha = 135 + 0.075d * Math.pow(tAnim - 75d, 2);
             beta = 180d - (45d * (tAnim - 50)) / 25d;
+            gamma = (45d * (tAnim-50)) / 50d;
             leftLegIsLeading = false;
             leftLegIsFrontLeg = true;
         } else {
             alpha = 135 + (45 / 25d) * (tAnim - 75d);
             beta = 135 + 0.075d * Math.pow(tAnim - 75d, 2);
+            gamma = (45d * (tAnim-50)) / 50d;
             leftLegIsLeading = true;
             leftLegIsFrontLeg = true;
         }
@@ -623,6 +637,11 @@ class Robot {
      * or right shoulder joint and then works downward. Drawing and rotating to
      * draw the two arm skeletons and elbow and wrist joint. </p>
      *
+     * First we assign armRotation with a value that makes an angel between the
+     * body and the arms. After we made that angle we assign a new value to 
+     * armRotation. This is turn the arm the the front or the back. If the
+     * left is in front the right arm is in fort and the other way around. 
+     * 
      * @param leftArm Based on the value of this variable either the left or
      * right arm is drawn.
      */
@@ -634,9 +653,25 @@ class Robot {
         gl.glTranslated(xAxisTranslation, 0, shoulderJointHeight);
 
         double upperArmRotation = leftArm ? -ANGLE_BETWEEN_Y_AND_UPPER_ARM : ANGLE_BETWEEN_Y_AND_UPPER_ARM;
-
+        
         gl.glRotated(upperArmRotation, 0, 1, 0);
 
+        if(leftArm){
+            if(!leftLegIsFrontLeg){
+                upperArmRotation = gamma;
+            }else{
+                upperArmRotation = -gamma;
+            }
+        }else{
+            if(!leftLegIsFrontLeg){
+                upperArmRotation = -gamma;
+            }else{
+                upperArmRotation = gamma;
+            }
+        }
+        
+        gl.glRotated(upperArmRotation, 1, 0, 0);
+        
         glut.glutSolidCylinder(SKELETON_LIMB_RADIUS, SKELETON_UPPER_ARM_LENGTH, 16, 16);
 
         gl.glTranslated(0, 0, SKELETON_UPPER_ARM_LENGTH);
@@ -867,6 +902,11 @@ class Robot {
      * of a cup connecting the upper arm to the torso, an upper arm and a lower
      * arm. </p>
      *
+     * First we assign armRotation with a value that makes an angel between the
+     * body and the arms. After we made that angle we assign a new value to 
+     * armRotation. This is turn the arm the the front or the back. If the
+     * left is in front the right arm is in fort and the other way around. 
+     * 
      * @param leftArm Whether the left arm should be drawn. If this is false the
      * right arm is drawn.
      */
@@ -880,6 +920,22 @@ class Robot {
 
         gl.glRotated(armRotation, 0, 1, 0);
 
+        if(leftArm){
+            if(!leftLegIsFrontLeg){
+                armRotation = gamma;
+            }else{
+                armRotation = -gamma;
+            }
+        }else{
+            if(!leftLegIsFrontLeg){
+                armRotation = -gamma;
+            }else{
+                armRotation = gamma;
+            }
+        }
+        
+        gl.glRotated(armRotation, 1, 0, 0);
+        
         setRobotMaterialColor(gl);
 
         drawSolidCup(gl, glu, glut, ROBOT_LIMB_RADIUS * 2, ROBOT_LIMB_RADIUS, SKELETON_UPPER_ARM_LENGTH / 2);
