@@ -22,9 +22,24 @@ class Camera {
      */
     public Vector up = Vector.Z;
     
+    /**
+     * Which mode the auto camera mode selected.
+     */
     private int autoCameraMode;
-    private Random random;    
+    
+    /**
+     * Instance of a random object used for determining the next auto camera mode.
+     */
+    private final Random random;    
+    
+    /**
+     * Used to ensure that a certain time passed before changing auto camera mode.
+     */
     private long msSinceLastCameraSwitch;
+    
+    /**
+     * Time in ms since the auto camera method was called. 
+     */
     private long timeOfLastMethodCall;
     
     public Camera() {
@@ -96,7 +111,8 @@ class Camera {
 
     /**
      * Computes eye, center, and up, based on the helicopter mode. The camera
-     * should focus on the robot. Focuses on the robot from above.
+     * should focus on the robot. Focuses on the robot from above. Uses the 
+     * tangent of the robot to ensure the camera rotates together with the robots.
      */
     private void setHelicopterMode(GlobalState gs, Robot focus) {
         this.center = focus.position;
@@ -106,7 +122,8 @@ class Camera {
 
     /**
      * Computes eye, center, and up, based on the motorcycle mode. The camera
-     * should focus on the robot.
+     * should focus on the robot. Takes a position perpendicular to the focused 
+     * robot and focuses on the torso of the robot. 
      */
     private void setMotorCycleMode(GlobalState gs, Robot focus) {
         
@@ -121,7 +138,8 @@ class Camera {
 
     /**
      * Computes eye, center, and up, based on the first person mode. The camera
-     * should view from the perspective of the robot.
+     * should view from the perspective of the robot. Takes a position slightly in
+     * front of the focus robot. 
      */
     private void setFirstPersonMode(GlobalState gs, Robot focus) {
         this.center = focus.direction;
@@ -134,7 +152,7 @@ class Camera {
 
     /**
      * Computes eye, center, and up, based on the auto mode. The above modes are
-     * alternated.
+     * alternated. Changes camera mode randomly every 3 seconds. 
      */
     private void setAutoMode(GlobalState gs, Robot focus) {
         msSinceLastCameraSwitch += System.currentTimeMillis() - timeOfLastMethodCall;

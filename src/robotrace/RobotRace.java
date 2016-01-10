@@ -44,7 +44,7 @@ public class RobotRace extends Base {
     /**
      * Each lap should take 30 seconds.
      */
-    private static final double ROBOT_INCREASE_PER_MILLISECOND = 1d / 30000d;
+    private static final double ROBOT_INCREASE_PER_MILLISECOND = 1d / 40000d;
     
     /**
      * Ensures that the animation value, which runs from 0 to 10 is modified so
@@ -55,7 +55,7 @@ public class RobotRace extends Base {
     /**
      * Constant that can be used to speedup or slowdown the speed of the animation. 
      */
-    private static final double ANIMATION_TIME_MODIFIER = 15;
+    private static final double ANIMATION_TIME_MODIFIER = 18;
     
     /**
      * Animation constant, runs from 0 to 10 and is incremented by the time 
@@ -105,16 +105,16 @@ public class RobotRace extends Base {
         robots = new Robot[4];
 
         // Initialize robot 0
-        robots[0] = new Robot(Material.WOOD, new Vector(-2, 0, 0));
+        robots[0] = new Robot(Material.WOOD, new Vector(-2, 0, 0), 1);
 
         // Initialize robot 1
-        robots[1] = new Robot(Material.SILVER, new Vector(-1, 0, 0));
+        robots[1] = new Robot(Material.SILVER, new Vector(-1, 0, 0), 2);
 
         // Initialize robot 2
-        robots[2] = new Robot(Material.GOLD, new Vector(1, 0, 0));
+        robots[2] = new Robot(Material.GOLD, new Vector(1, 0, 0), 3);
 
         // Initialize robot 3
-        robots[3] = new Robot(Material.ORANGE, new Vector(2, 0, 0));
+        robots[3] = new Robot(Material.ORANGE, new Vector(2, 0, 0), 4);
 
         // Initialize the camera
         camera = new Camera();
@@ -219,7 +219,7 @@ public class RobotRace extends Base {
         gs.theta = (float) Math.PI / 4f;
         gs.phi = (float) Math.PI / 3f;
 
-        gs.vDist = 21;
+        gs.vDist = 21;       
     }
 
     /**

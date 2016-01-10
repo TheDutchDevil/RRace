@@ -30,13 +30,16 @@ class Terrain {
     };
 
     /**
-     * Can be used to set up a display list.
-     */
-    public Terrain() {
-    }
-
-    /**
-     * Draws the terrain.
+     * Draws the terrain. Sets up 1D texturemapping, then starts with drawing the
+     * terrain. The terrain itself is drawn as a collection of triangles, where
+     * a strip of triangles is drawn iteration. Incrementing the step variable
+     * in the u direction and modifying the v variable each iteration, removing
+     * or adding one step value so that a strip in the u direction is drawn as 
+     * a series of triangles. 
+     * 
+     * After each strip u is reset to zero and v is incremented by one so 
+     * that the next strip is drawn. Finally it draws a transparent polygon 
+     * representing the water.
      */
     public void draw(GL2 gl, GLU glu, GLUT glut) {
 
@@ -105,6 +108,12 @@ class Terrain {
         drawTransparentPolygon(gl, glu, glut);
     }
 
+    /**
+     * Draws a transparent polygon where the water is supposed to be. Draws the
+     * polygon from -20,-20,-1 to 20,20,0. Is drawn as the last part of the 
+     * terrain because of the blending. To ensure normals are correctly defined
+     * the polygon is drawn as a loose collection of GL_QUADS.
+     */
     private void drawTransparentPolygon(GL2 gl, GLU glu, GLUT glut) {
 
         gl.glColor4d(.4, .4, .4, .2);
@@ -150,7 +159,8 @@ class Terrain {
     }
 
     /**
-     * Computes the elevation of the terrain at (x, y).
+     * Computes the elevation of the terrain at (x, y). Formula taken from the
+     * assignments document. 
      */
     public double heightAt(double x, double y) {
         return 0.6d * Math.cos(0.3d * x + 0.2d * y) + 0.4d * Math.cos(x - 0.5d * y);
@@ -178,6 +188,12 @@ class Terrain {
         return new Vector(x, y, z);
     }
 
+    /**
+     * Tangent w.r.t. to u of the heightAt function. u and v are input variables,
+     * ranging from 0 to 1. In the function both u and v are multiplied with 40
+     * and then 20 is subtracted so that the range of x and y is -20 to 20.
+     * @return 
+     */
     private Vector tangentInU(double u, double v) {
 
         double x, y, z;
@@ -189,6 +205,14 @@ class Terrain {
         return new Vector(x, y, z);
     }
 
+    /**
+     * Tangent w.r.t. to v of the heightAt function. u and v are input variables,
+     * ranging from 0 to 1. In the function both u and v are multiplied with 40
+     * and then 20 is subtracted so that the range of x and y is -20 to 20.
+     * @param u
+     * @param v
+     * @return 
+     */
     private Vector tangentInV(double u, double v) {
         double x, y, z;
 
@@ -200,7 +224,7 @@ class Terrain {
     }
 
     /**
-     * Creates a new 1D - texture.
+     * Creates a new 1D - texture. Taken from the hints and tricks document.
      *
      * @param gl
      * @param colors

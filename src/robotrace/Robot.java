@@ -194,6 +194,8 @@ class Robot {
      */
     private final Material material;
 
+    private final int robotNr;
+
     /**
      * Angle between the left lower leg and upper leg, used in the calculation
      * for the animation.
@@ -207,15 +209,13 @@ class Robot {
 
     /**
      * Angle between the z-as and upper arm.
-     */    
+     */
     private double gamma;
-    
+
     /**
      * Leading leg is the leg that is on the ground during the walking
      * animation.
      */
-    
-    
     private boolean leftLegIsLeading;
 
     /**
@@ -244,9 +244,10 @@ class Robot {
     /**
      * Constructs the robot with initial parameters.
      */
-    public Robot(Material material, Vector position) {
+    public Robot(Material material, Vector position, int robotNr) {
         this.material = material;
         this.position = position;
+        this.robotNr = robotNr;
     }
 
     /**
@@ -257,7 +258,7 @@ class Robot {
      *
      * gamma is also calculate this is the angle between the z-as and the upper
      * arm. This will go linearly form 0 to 45.
-     * 
+     *
      * The animation is divided into four parts, half of it is when the right
      * leg makes a step forward and half of it for when the left leg makes a
      * step forward. Those two parts are further subdivided into two parts each
@@ -287,13 +288,13 @@ class Robot {
         } else if (tAnim <= 75) {
             alpha = 135 + 0.075d * Math.pow(tAnim - 75d, 2);
             beta = 180d - (45d * (tAnim - 50)) / 25d;
-            gamma = (45d * (tAnim-50)) / 50d;
+            gamma = (45d * (tAnim - 50)) / 50d;
             leftLegIsLeading = false;
             leftLegIsFrontLeg = true;
         } else {
             alpha = 135 + (45 / 25d) * (tAnim - 75d);
             beta = 135 + 0.075d * Math.pow(tAnim - 75d, 2);
-            gamma = (45d * (tAnim-50)) / 50d;
+            gamma = (45d * (tAnim - 50)) / 50d;
             leftLegIsLeading = true;
             leftLegIsFrontLeg = true;
         }
@@ -360,12 +361,18 @@ class Robot {
     }
 
     /**
-     * Draws the entire leg (including the shoe) of the robot. Starts from the
-     * bottom then moves up drawing the shoe, ankle, lower leg and upper leg.
-     * Modifies the reference frame up after each item of geometry. At the end
-     * it clears the transformed matrix to return the reference to where it was
-     * before calling the method.
-     *
+     * Draws the entire leg (including the shoe) of the robot. Starts at the hip.
+     * Hip height is dependent on the animation value. After moving the reference
+     * frame to the height of the hip the reference frame is flipped 180 degrees
+     * over the x axis.
+     * 
+     * Then the reference frame is rotated again based on the animation values
+     * and in which state the animation is. So that the upper leg is drawn
+     * at the correct angle w.r.t. to the torso. 
+     * 
+     * At the knee it again rotates the reference frame based on the animation
+     * values, then it draws the lower leg. 
+     * 
      * For the shoe and ankle seperate methods are called that draw those items
      * in more detail, the lower and upper leg consist out of a cylinder.
      *
@@ -455,7 +462,7 @@ class Robot {
         if (leftLeg && leftLegIsFrontLeg || !leftLeg && !leftLegIsFrontLeg) {
             gl.glRotated(180, 0, 1, 0);
         } else {
-            
+
         }
 
         gl.glTranslated(0, 0, -(SHOE_HEIGHT + ANKLE_HEIGHT));
@@ -484,11 +491,20 @@ class Robot {
 
     /**
      * <p>
-     * Draws either the right or left stick leg. It does this by pushing a new
-     * matrix on the stack. Then it translates to the position of either the
-     * left or right ankle. From there it draws the ankle joint, the lower leg
-     * skeleton. Then on top of that it draws the knee joint and the upper leg
-     * skeleton. </p>
+     * Draws either the right or left stick leg. First the reference frame is
+     * moved to the height of the hips. Based on the height of the hips
+     * calculated at the start of the draw function.</p>
+     * 
+     * <p>Then it rotates the reference frame 180 degrees over the y axis. After
+     * doing that it rotates the reference frame with the angle between the
+     * upper leg, for this there are several cases based on which leg is leading,
+     * which leg is in front and which leg is being drawn. Then it draws the 
+     * upper leg.</p>
+     * 
+     * <p>At the knee it again rotates the reference with a angle depending on
+     * the animation values and alpha or beta values. after which it rotates the
+     * reference frame again so that the lower leg and foot joint can be
+     * correctly drawn based on the animation values. </p>
      *
      * @param leftSide Whether this stick leg is the left leg of the stick
      * figure. If this value is false it assumed it is the right leg.
@@ -638,10 +654,10 @@ class Robot {
      * draw the two arm skeletons and elbow and wrist joint. </p>
      *
      * First we assign armRotation with a value that makes an angel between the
-     * body and the arms. After we made that angle we assign a new value to 
-     * armRotation. This is turn the arm the the front or the back. If the
-     * left is in front the right arm is in fort and the other way around. 
-     * 
+     * body and the arms. After we made that angle we assign a new value to
+     * armRotation. This is turn the arm the the front or the back. If the left
+     * is in front the right arm is in fort and the other way around.
+     *
      * @param leftArm Based on the value of this variable either the left or
      * right arm is drawn.
      */
@@ -653,25 +669,23 @@ class Robot {
         gl.glTranslated(xAxisTranslation, 0, shoulderJointHeight);
 
         double upperArmRotation = leftArm ? -ANGLE_BETWEEN_Y_AND_UPPER_ARM : ANGLE_BETWEEN_Y_AND_UPPER_ARM;
-        
+
         gl.glRotated(upperArmRotation, 0, 1, 0);
 
-        if(leftArm){
-            if(!leftLegIsFrontLeg){
+        if (leftArm) {
+            if (!leftLegIsFrontLeg) {
                 upperArmRotation = gamma;
-            }else{
+            } else {
                 upperArmRotation = -gamma;
             }
-        }else{
-            if(!leftLegIsFrontLeg){
-                upperArmRotation = -gamma;
-            }else{
-                upperArmRotation = gamma;
-            }
+        } else if (!leftLegIsFrontLeg) {
+            upperArmRotation = -gamma;
+        } else {
+            upperArmRotation = gamma;
         }
-        
+
         gl.glRotated(upperArmRotation, 1, 0, 0);
-        
+
         glut.glutSolidCylinder(SKELETON_LIMB_RADIUS, SKELETON_UPPER_ARM_LENGTH, 16, 16);
 
         gl.glTranslated(0, 0, SKELETON_UPPER_ARM_LENGTH);
@@ -799,25 +813,142 @@ class Robot {
     }
 
     /**
-     * Moves up to the height of the neck the it draws the upper body as a
-     * series of increasingly wider cylinders. To draw the torso it uses the
-     * drawSolidCup method. To ensure a torso shape the torso is scaled .666 in
-     * the y axis. To make it wider than that the body is thick.
+     * Moves up to the height of the hips, binds the torso texture, then draws
+     * three surfaces. First it draws the outside of the body (a cylinder) for
+     * that it uses a parametric definition defined in torsoPoint(u, v).
+     * 
+     * While drawing the outside it also maps the torso texture onto the body.
+     * The torso texture is a strip of four textures, each texture for a different
+     * robot. Based on the robotNumber (1 to 4) 1/4 of the texture is mapped
+     * onto both the front and back of the torso.
+     * 
+     * After that the top and bottom of the torso are drawn to close the torso.
      */
     private void drawUpperBody(GL2 gl, GLU glu, GLUT glut) {
         gl.glPushMatrix();
 
+        gl.glTranslated(0, 0, hipheight);
+
+        RobotRace.torso.bind(gl);
+
         setRobotMaterialColor(gl);
 
-        gl.glTranslated(0, 0, shoulderHeight);
+        gl.glBegin(GL2.GL_QUAD_STRIP);
 
-        gl.glScaled(1, .666, 1);
+        double steps = 1 / 20d;
 
-        drawSolidCup(gl, glu, glut, LOWER_TORSO_RADIUS, UPPER_TORSO_RADIUS, TORSO_HEIGHT);
+        for (int i = 0; i <= 20; i++) {
+            Vector lower = torsoPoint(i * steps, 0);
+            Vector upper = torsoPoint(i * steps, 1);
+
+            Vector lowerNormal = torsoTangentInUDirection(i * steps, 0).cross(torsoTangentInVDirection(i * steps, 0)).normalized();
+            Vector upperNormal = torsoTangentInUDirection(i * steps, 1).cross(torsoTangentInVDirection(i * steps, 1)).normalized();
+
+            double t = i;
+
+            if (t > 10) {
+                t -= 10;
+            }
+
+            gl.glNormal3d(lowerNormal.x, lowerNormal.y, lowerNormal.z);
+
+            gl.glTexCoord2d(((t / 10d) / 4d) + ((robotNr - 1d)/4), 0);
+
+            gl.glVertex3d(lower.x, lower.y, lower.z);
+
+            gl.glNormal3d(upperNormal.x, upperNormal.y, upperNormal.z);
+
+            gl.glTexCoord2d(((t / 10d) / 4d) + ((robotNr - 1d)/4), 1);
+
+            gl.glVertex3d(upper.x, upper.y, upper.z);
+        }
+
+        gl.glEnd();
+        
+        /**
+         * Bind a neutral texture to prevent the rest of the robot from being 
+         * impacted. 
+         */
+        gl.glBindTexture(GL2.GL_TEXTURE_2D, 0);
+
+        gl.glBegin(GL2.GL_TRIANGLE_STRIP);
+
+        gl.glNormal3d(0, 0, 1);
+
+        for (int i = 0; i <= 20; i++) {
+            Vector edgePoint = torsoPoint(i * steps, 1);
+
+            gl.glVertex3d(edgePoint.x, edgePoint.y, edgePoint.z);
+
+            gl.glVertex3d(0, 0, TORSO_HEIGHT);
+        }
+
+        gl.glEnd();
+
+        gl.glBegin(GL2.GL_TRIANGLE_STRIP);
+        gl.glNormal3d(0, 0, -1);
+
+        for (int i = 0; i <= 20; i++) {
+            Vector edgePoint = torsoPoint(i * steps, 0);
+
+            gl.glVertex3d(edgePoint.x, edgePoint.y, edgePoint.z);
+
+            gl.glVertex3d(0, 0, 0);
+        }
+
+        gl.glEnd();
 
         unsetSpecularMaterialValues(gl);
 
         gl.glPopMatrix();
+    }
+
+    /**
+     * Calculates a point on the cylinder surface of the torso of the robot. 
+     * A standard parametric cylinder function is used. However, the radius
+     * of the drawn eclipse is decreased as v increases. This way, the effect
+     * of a body that is wider at the hips is mimicked. 
+     * 
+     * A is the maximum radius on the X axis at V is 0. D is how much A decreases
+     * as V increases. Until at V is 1 the radius of the torso on the X axis 
+     * is LOWER_TORSO_RADIUS. 
+     * 
+     * @param u A value from 0 to 1
+     * @param v A value from 0 to 1
+     * @return A point on the torso.
+     */
+    private Vector torsoPoint(double u, double v) {
+        double a = LOWER_TORSO_RADIUS;
+
+        double d = LOWER_TORSO_RADIUS - UPPER_TORSO_RADIUS;
+
+        return new Vector((a - d * v) * Math.cos(2 * Math.PI * u), .6666 * (a - d * v) * Math.sin(2 * Math.PI * u), TORSO_HEIGHT * v);
+    }
+
+    /**
+     * Derivative of the torsoPoint function w.r.t to the U parameter.
+     * @param u
+     * @param v
+     * @return 
+     */
+    private Vector torsoTangentInUDirection(double u, double v) {
+        double a = LOWER_TORSO_RADIUS;
+        double d = LOWER_TORSO_RADIUS - UPPER_TORSO_RADIUS;
+
+        return new Vector(-2 * Math.PI * (a - d * v) * Math.sin(2 * Math.PI * u), .666 * 2 * Math.PI * (a - d * v) * Math.cos(2 * Math.PI * u), 0);
+    }
+
+    /**
+     * Derivative of the torsoPoint function w.r.t. to the V parameter.
+     * @param u
+     * @param v
+     * @return 
+     */
+    private Vector torsoTangentInVDirection(double u, double v) {
+        double a = LOWER_TORSO_RADIUS;
+        double d = LOWER_TORSO_RADIUS - UPPER_TORSO_RADIUS;
+
+        return new Vector(-d * Math.cos(2 * Math.PI * u), -.666 * d * Math.sin(2 * Math.PI * u), TORSO_HEIGHT);
     }
 
     /**
@@ -903,10 +1034,10 @@ class Robot {
      * arm. </p>
      *
      * First we assign armRotation with a value that makes an angel between the
-     * body and the arms. After we made that angle we assign a new value to 
-     * armRotation. This is turn the arm the the front or the back. If the
-     * left is in front the right arm is in fort and the other way around. 
-     * 
+     * body and the arms. After we made that angle we assign a new value to
+     * armRotation. This is turn the arm the the front or the back. If the left
+     * is in front the right arm is in fort and the other way around.
+     *
      * @param leftArm Whether the left arm should be drawn. If this is false the
      * right arm is drawn.
      */
@@ -920,22 +1051,20 @@ class Robot {
 
         gl.glRotated(armRotation, 0, 1, 0);
 
-        if(leftArm){
-            if(!leftLegIsFrontLeg){
+        if (leftArm) {
+            if (!leftLegIsFrontLeg) {
                 armRotation = gamma;
-            }else{
+            } else {
                 armRotation = -gamma;
             }
-        }else{
-            if(!leftLegIsFrontLeg){
-                armRotation = -gamma;
-            }else{
-                armRotation = gamma;
-            }
+        } else if (!leftLegIsFrontLeg) {
+            armRotation = -gamma;
+        } else {
+            armRotation = gamma;
         }
-        
+
         gl.glRotated(armRotation, 1, 0, 0);
-        
+
         setRobotMaterialColor(gl);
 
         drawSolidCup(gl, glu, glut, ROBOT_LIMB_RADIUS * 2, ROBOT_LIMB_RADIUS, SKELETON_UPPER_ARM_LENGTH / 2);
