@@ -276,25 +276,25 @@ class Robot {
         if (tAnim <= 25) {
             alpha = 180d - (45d * tAnim) / 25d;
             beta = 135 + 0.075d * Math.pow(tAnim - 25d, 2);
-            gamma = (45d * tAnim) / 50d;
+            gamma = (45d * tAnim) / 25d;
             leftLegIsLeading = true;
             leftLegIsFrontLeg = false;
         } else if (tAnim <= 50) {
             alpha = 135 + 0.075d * Math.pow(tAnim - 25d, 2);
             beta = 135 + (45 / 25d) * (tAnim - 25d);
-            gamma = (45d * (tAnim)) / 50d;
+            gamma = 45-((45d * (tAnim-25)) / 25d);
             leftLegIsLeading = false;
             leftLegIsFrontLeg = false;
         } else if (tAnim <= 75) {
             alpha = 135 + 0.075d * Math.pow(tAnim - 75d, 2);
             beta = 180d - (45d * (tAnim - 50)) / 25d;
-            gamma = (45d * (tAnim - 50)) / 50d;
+            gamma = (45d * (tAnim - 50)) / 25d;
             leftLegIsLeading = false;
             leftLegIsFrontLeg = true;
         } else {
             alpha = 135 + (45 / 25d) * (tAnim - 75d);
             beta = 135 + 0.075d * Math.pow(tAnim - 75d, 2);
-            gamma = (45d * (tAnim - 50)) / 50d;
+            gamma = 45-((45d * (tAnim - 75)) / 25d);
             leftLegIsLeading = true;
             leftLegIsFrontLeg = true;
         }
