@@ -16,7 +16,7 @@ class Terrain {
      * The amount of horizontal and vertical steps in which the terrain is
      * drawn.
      */
-    private static final int TERRAIN_STEPS = 140;
+    private static final int TERRAIN_STEPS = 50;
 
     /**
      * Color array used for the 1D texture mapping of the terrain. The amount of

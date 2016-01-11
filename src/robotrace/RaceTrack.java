@@ -19,7 +19,7 @@ public class RaceTrack {
     /**
      * The amount of pieces in which a track is drawn. 
      */
-    private final static int NUMBER_OF_TRACK_SUBDIVISIONS = 70;
+    private final static int NUMBER_OF_TRACK_SUBDIVISIONS = 60;
 
     /**
      * This means that one full texture will mapped onto five subdivisions.

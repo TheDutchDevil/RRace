@@ -967,7 +967,7 @@ class Robot {
     private void drawSolidCup(GL2 gl, GLU glu, GLUT glut, double bottomRadius, double upperRadius, double height) {
         gl.glPushMatrix();
 
-        final int nrDivisions = 20;
+        final int nrDivisions = 10;
         final double subdivisionHeight = height / nrDivisions;
         final double step = (bottomRadius - upperRadius) / nrDivisions;
 
@@ -1106,15 +1106,92 @@ class Robot {
 
         glut.glutSolidCylinder(ROBOT_LIMB_RADIUS, NECK_LENGTH, 16, 16);
 
-        gl.glColor3fv(ROBOT_HEAD_COLOR, 0);
-
         gl.glTranslated(0, 0, .15 * SIZE);
+        
+        gl.glColor3f(1, 1, 1);
+        
+        RobotRace.head.bind(gl);
+        
+        gl.glBegin(GL2.GL_QUADS);
+        
+        gl.glNormal3d(0,1,0);
+        
+        gl.glTexCoord2d(1,1);
+        gl.glVertex3d(-.1*SIZE, .1*SIZE, .1*SIZE);
+        gl.glTexCoord2d(0,1);
+        gl.glVertex3d(.1*SIZE, .1*SIZE, .1*SIZE);
+        gl.glTexCoord2d(0,0);
+        gl.glVertex3d(.1*SIZE, .1*SIZE, -.1*SIZE);
+        gl.glTexCoord2d(1,0);
+        gl.glVertex3d(-.1*SIZE, .1*SIZE, -.1*SIZE);
+        
+        gl.glNormal3d(1,0,0);
+        
+        gl.glTexCoord2d(1,1);
+        gl.glVertex3d(.1*SIZE, .1*SIZE, .1*SIZE);
+        gl.glTexCoord2d(0,1);
+        gl.glVertex3d(.1*SIZE, -.1*SIZE, .1*SIZE);
+        gl.glTexCoord2d(0,0);
+        gl.glVertex3d(.1*SIZE, -.1*SIZE, -.1*SIZE);
+        gl.glTexCoord2d(1,0);
+        gl.glVertex3d(.1*SIZE, .1*SIZE, -.1*SIZE);
+        
+        gl.glNormal3d(0,-1,0);
+        
+        gl.glTexCoord2d(1,1);
+        gl.glVertex3d(-.1*SIZE, -.1*SIZE, .1*SIZE);
+        gl.glTexCoord2d(0,1);
+        gl.glVertex3d(.1*SIZE, -.1*SIZE, .1*SIZE);
+        gl.glTexCoord2d(0,0);
+        gl.glVertex3d(.1*SIZE, -.1*SIZE, -.1*SIZE);
+        gl.glTexCoord2d(1,0);
+        gl.glVertex3d(-.1*SIZE, -.1*SIZE, -.1*SIZE);
+        
+        gl.glNormal3d(-1,0,0);
+        
+        gl.glTexCoord2d(1,1);
+         gl.glVertex3d(-.1*SIZE, .1*SIZE, .1*SIZE);
+         gl.glTexCoord2d(0,1);
+        gl.glVertex3d(-.1*SIZE, -.1*SIZE, .1*SIZE);
+        gl.glTexCoord2d(0,0);
+        gl.glVertex3d(-.1*SIZE, -.1*SIZE, -.1*SIZE);
+        gl.glTexCoord2d(1,0);
+        gl.glVertex3d(-.1*SIZE, .1*SIZE, -.1*SIZE);
+        
+        gl.glNormal3d(0,0,1);
+        
+        gl.glTexCoord2d(1,1);
+        gl.glVertex3d(-.1*SIZE, .1*SIZE, .1*SIZE);
+        gl.glTexCoord2d(0,1);
+        gl.glVertex3d(-.1*SIZE, -.1*SIZE, .1*SIZE);
+        gl.glTexCoord2d(0,0);
+        gl.glVertex3d(.1*SIZE, -.1*SIZE, .1*SIZE);
+        gl.glTexCoord2d(1,0);
+        gl.glVertex3d(.1*SIZE, .1*SIZE, .1*SIZE);
+        
+        gl.glNormal3d(0,0,-1);
+        
+        gl.glTexCoord2d(1,1);
+        gl.glVertex3d(-.1*SIZE, .1*SIZE, -.1*SIZE);
+        gl.glTexCoord2d(0,1);
+        gl.glVertex3d(-.1*SIZE, -.1*SIZE, -.1*SIZE);
+        gl.glTexCoord2d(0,0);
+        gl.glVertex3d(.1*SIZE, -.1*SIZE, -.1*SIZE);
+        gl.glTexCoord2d(1,0);
+        gl.glVertex3d(.1*SIZE, .1*SIZE, -.1*SIZE);
+        
+        gl.glEnd();
+        
+        gl.glBindTexture(GL2.GL_TEXTURE_2D, 0);
+
+        gl.glColor3fv(ROBOT_HEAD_COLOR, 0);
 
         /**
          * Pushes a new matrix, moves to the center of the back part of the head
          * and draws it. Afterwards pop the matrix so that the position is
          * returned to the center of the head.
-         */
+         *
+        
         gl.glPushMatrix();
         {
             gl.glTranslated(0, -.025 * SIZE, 0);
@@ -1128,7 +1205,7 @@ class Robot {
          * Draws the upper frontal part of the head. Clears the matrix stack
          * after finishing to move the everything back to the center of the
          * head.
-         */
+         *
         gl.glPushMatrix();
         {
             gl.glTranslated(0, .075 * SIZE, 0.025 * SIZE);
@@ -1140,7 +1217,7 @@ class Robot {
         /**
          * Draws the mouth (lower frontal part) of the head. Changes the color
          * to a shade of red.
-         */
+         *
         gl.glPushMatrix();
         {
             gl.glTranslated(0, .075 * SIZE, -.075 * SIZE);
@@ -1149,6 +1226,7 @@ class Robot {
             glut.glutSolidCube((float) (.05 * SIZE));
         }
         gl.glPopMatrix();
+        * */
 
         drawEar(gl, glu, glut, true);
         drawEar(gl, glu, glut, false);
