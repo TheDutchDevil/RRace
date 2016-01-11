@@ -3,6 +3,7 @@ package robotrace;
 import com.jogamp.opengl.util.gl2.GLUT;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
 import javax.media.opengl.fixedfunc.GLLightingFunc;
@@ -16,6 +17,12 @@ import jogamp.graph.curve.tess.HEdge;
  */
 class Robot {
 
+    private static final double INITIAL_TRACK_ROUND_STEP = 1d/40000;
+    
+    private static final int INITIAL_ANIMATION_MODIFIER = 18;
+    
+    private static final double DESIRED_ANIMATION_RATIO = INITIAL_TRACK_ROUND_STEP / INITIAL_ANIMATION_MODIFIER;
+    
     /**
      * Size of the robot in meters, all other constant size values of the robot
      * are based on this value.
@@ -240,14 +247,70 @@ class Robot {
      * shoulder joints. Based on the value of tAnim.
      */
     private double shoulderHeight;
+    
+    private double trackRoundStep = INITIAL_TRACK_ROUND_STEP;
+    
+    private double posOnTrack;
+    
+    private double tAnim; 
+    
+    private double tAnimModifier = INITIAL_ANIMATION_MODIFIER; 
+    
+    private long msUntilNextRandomValueUpdate;
+    
+    private double totalDistanceTravelled;
+    
+    private final Random random;
 
     /**
      * Constructs the robot with initial parameters.
      */
-    public Robot(Material material, Vector position, int robotNr) {
+    public Robot(Material material, Vector position, int robotNr, Random random) {
         this.material = material;
         this.position = position;
         this.robotNr = robotNr;
+        this.random = random;
+        
+        msUntilNextRandomValueUpdate = random.nextInt(5000) + 3000;
+    }
+    
+    public void determineNewAnimationVariables(int msElapsed) {
+        msUntilNextRandomValueUpdate -= msElapsed;
+        
+        if(msUntilNextRandomValueUpdate < 0) {
+            int trackRoundInMs = 32500 + random.nextInt(15000);
+            trackRoundStep = 1d/trackRoundInMs;
+            tAnimModifier = (1d/trackRoundInMs)/DESIRED_ANIMATION_RATIO;
+            
+            msUntilNextRandomValueUpdate = random.nextInt(5000) + 3000;
+        }
+    }
+    
+    public void calculateNewPosOnTrack(int msElapsed) {
+        posOnTrack += (trackRoundStep * msElapsed);
+        totalDistanceTravelled += (trackRoundStep * msElapsed);
+        while(posOnTrack > 1) {
+            posOnTrack -= 1;
+        }
+    }
+    
+    public void calculateNewAnimValue(int msElapsed) {
+        tAnim += (msElapsed /1000d) * tAnimModifier;
+        while(tAnim >= 10) {
+            tAnim -= 10;
+        }
+    }
+    
+    public double getTotalDistanceTravelled() {
+        return totalDistanceTravelled;
+    }
+    
+    public double getTAnim() {
+        return this.tAnim;
+    }
+    
+    public double getPosOnTrack() {
+        return this.posOnTrack;
     }
 
     /**

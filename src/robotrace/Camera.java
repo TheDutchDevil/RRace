@@ -1,5 +1,6 @@
 package robotrace;
 
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -21,27 +22,29 @@ class Camera {
      * The up vector.
      */
     public Vector up = Vector.Z;
-    
+
     /**
      * Which mode the auto camera mode selected.
      */
     private int autoCameraMode;
-    
+
     /**
-     * Instance of a random object used for determining the next auto camera mode.
+     * Instance of a random object used for determining the next auto camera
+     * mode.
      */
-    private final Random random;    
-    
+    private final Random random;
+
     /**
-     * Used to ensure that a certain time passed before changing auto camera mode.
+     * Used to ensure that a certain time passed before changing auto camera
+     * mode.
      */
     private long msSinceLastCameraSwitch;
-    
+
     /**
-     * Time in ms since the auto camera method was called. 
+     * Time in ms since the auto camera method was called.
      */
     private long timeOfLastMethodCall;
-    
+
     public Camera() {
         this.random = new Random();
         this.autoCameraMode = 1;
@@ -52,8 +55,8 @@ class Camera {
      * Updates the camera viewpoint and direction based on the selected camera
      * mode.
      */
-    public void update(GlobalState gs, Robot focus) {
-        
+    public void update(GlobalState gs, List<Robot> focus) {
+
         switch (gs.camMode) {
 
             // Helicopter mode
@@ -102,66 +105,85 @@ class Camera {
      */
     private void setDefaultMode(GlobalState gs) {
         double invertedPhi = Math.PI / 2 - gs.phi;
-        
+
         this.eye = RobotRace.sphericalToCoords(gs.theta, invertedPhi, gs.vDist);
-        
+
         this.center = gs.cnt;
         this.up = Vector.Z;
     }
 
     /**
      * Computes eye, center, and up, based on the helicopter mode. The camera
-     * should focus on the robot. Focuses on the robot from above. Uses the 
-     * tangent of the robot to ensure the camera rotates together with the robots.
+     * should focus on the robot. Focuses on the robot from above. Uses the
+     * tangent of the robot to ensure the camera rotates together with the
+     * robots.
      */
-    private void setHelicopterMode(GlobalState gs, Robot focus) {
-        this.center = focus.position;
-        this.eye = focus.position.add(new Vector(0, 0, 15));
-        this.up = focus.direction;
+    private void setHelicopterMode(GlobalState gs, List<Robot> focus) {
+        this.center = focus.get(0).position;
+        this.eye = focus.get(0).position.add(new Vector(0, 0, 15));
+        this.up = focus.get(0).direction;
     }
 
     /**
      * Computes eye, center, and up, based on the motorcycle mode. The camera
-     * should focus on the robot. Takes a position perpendicular to the focused 
-     * robot and focuses on the torso of the robot. 
+     * should focus on the robot. Takes a position perpendicular to the focused
+     * robot and focuses on the torso of the robot.
      */
-    private void setMotorCycleMode(GlobalState gs, Robot focus) {
+    private void setMotorCycleMode(GlobalState gs, List<Robot> focus) {
         
-        Vector perpToRobot = focus.direction.cross(Vector.Z).normalized();
+        Robot mostTravelled = null;
+
+        for (Robot rob : focus) {
+            if (mostTravelled == null || mostTravelled.getTotalDistanceTravelled() < rob.getTotalDistanceTravelled()) {
+                mostTravelled = rob;
+            }
+        }
         
-        this.eye = focus.position.add(perpToRobot.scale(4.5d));
-        this.eye.z = focus.position.z + 1.5d;
-        
-        this.center = focus.position.add(new Vector(0, 0, 1.1d));
+        mostTravelled = focus.get(0);
+
+        Vector perpToRobot = mostTravelled.direction.cross(Vector.Z).normalized();
+
+        this.eye = mostTravelled.position.add(perpToRobot.scale(8 + focus.indexOf(mostTravelled)*-1.75d));
+        this.eye.z = mostTravelled.position.z + 1.5d;
+
+        this.center = mostTravelled.position.add(new Vector(0, 0, 1.1d));
         this.up = Vector.Z;
     }
 
     /**
      * Computes eye, center, and up, based on the first person mode. The camera
-     * should view from the perspective of the robot. Takes a position slightly in
-     * front of the focus robot. 
+     * should view from the perspective of the robot. Takes a position slightly
+     * in front of the focus robot.
      */
-    private void setFirstPersonMode(GlobalState gs, Robot focus) {
-        this.center = focus.direction;
+    private void setFirstPersonMode(GlobalState gs, List<Robot> focus) {
+        Robot leastTravelled = null;
+
+        for (Robot rob : focus) {
+            if (leastTravelled == null || leastTravelled.getTotalDistanceTravelled() > rob.getTotalDistanceTravelled()) {
+                leastTravelled = rob;
+            }
+        }
+
+        this.center = leastTravelled.direction.normalized().add(leastTravelled.position).add(new Vector(0, 0, 1.75));
         this.up = Vector.Z;
-        this.eye = focus.position;
+        this.eye = leastTravelled.position;
         this.eye.z += 1.75;
-        
-        this.eye = this.eye.add(focus.direction.normalized().scale(.5d));
+
+        this.eye = this.eye.add(leastTravelled.direction.normalized().scale(.5d));
     }
 
     /**
      * Computes eye, center, and up, based on the auto mode. The above modes are
-     * alternated. Changes camera mode randomly every 3 seconds. 
+     * alternated. Changes camera mode randomly every 3 seconds.
      */
-    private void setAutoMode(GlobalState gs, Robot focus) {
+    private void setAutoMode(GlobalState gs, List<Robot> focus) {
         msSinceLastCameraSwitch += System.currentTimeMillis() - timeOfLastMethodCall;
-        
+
         if (msSinceLastCameraSwitch > 3000) {
             this.autoCameraMode = random.nextInt(3) + 1;
-            msSinceLastCameraSwitch = 0;            
-        }        
-        
+            msSinceLastCameraSwitch = 0;
+        }
+
         switch (this.autoCameraMode) {
             case 1:
                 this.setHelicopterMode(gs, focus);
@@ -173,8 +195,8 @@ class Camera {
                 this.setFirstPersonMode(gs, focus);
                 break;
         }
-        
+
         timeOfLastMethodCall = System.currentTimeMillis();
     }
-    
+
 }

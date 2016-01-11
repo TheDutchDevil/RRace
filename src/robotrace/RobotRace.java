@@ -1,6 +1,8 @@
 package robotrace;
 
 import java.nio.FloatBuffer;
+import java.util.Arrays;
+import java.util.Random;
 import javax.media.opengl.GL;
 import static javax.media.opengl.GL2.*;
 import static javax.media.opengl.fixedfunc.GLLightingFunc.GL_AMBIENT;
@@ -42,39 +44,23 @@ import static javax.media.opengl.fixedfunc.GLLightingFunc.GL_SPECULAR;
 public class RobotRace extends Base {
 
     /**
-     * Each lap should take 30 seconds.
-     */
-    private static final double ROBOT_INCREASE_PER_MILLISECOND = 1d / 40000d;
-    
-    /**
      * Ensures that the animation value, which runs from 0 to 10 is modified so
      * that it runs from 0 to 100.
      */
     private static final double ANIMATION_TIME_CLAMP = 10;
-    
-    /**
-     * Constant that can be used to speedup or slowdown the speed of the animation. 
-     */
-    private static final double ANIMATION_TIME_MODIFIER = 18;
-    
-    /**
-     * Animation constant, runs from 0 to 10 and is incremented by the time 
-     * passed between scene draw method calls. 
-     */
-    private double tAnimSeconds = 0;
 
     /**
      * Last time in milliseconds that the scene got updated, this time is used
-     * to calculate the time that passed between scene updates so that the 
+     * to calculate the time that passed between scene updates so that the
      * animation and robot progress along the track can be calculated.
      */
     private long lastSceneUpdateTime = System.currentTimeMillis();
-    
+
     /**
-     * 
+     *
      */
-    private double positionOnTrack;
-    
+    private final Random random;
+
     /**
      * Array of the four robots.
      */
@@ -100,21 +86,23 @@ public class RobotRace extends Base {
      * terrain.
      */
     public RobotRace() {
+        
+        random = new Random();
 
         // Create a new array of four robots
         robots = new Robot[4];
 
         // Initialize robot 0
-        robots[0] = new Robot(Material.WOOD, new Vector(-2, 0, 0), 1);
+        robots[0] = new Robot(Material.WOOD, new Vector(-2, 0, 0), 1, random);
 
         // Initialize robot 1
-        robots[1] = new Robot(Material.SILVER, new Vector(-1, 0, 0), 2);
+        robots[1] = new Robot(Material.SILVER, new Vector(-1, 0, 0), 2, random);
 
         // Initialize robot 2
-        robots[2] = new Robot(Material.GOLD, new Vector(1, 0, 0), 3);
+        robots[2] = new Robot(Material.GOLD, new Vector(1, 0, 0), 3, random);
 
         // Initialize robot 3
-        robots[3] = new Robot(Material.ORANGE, new Vector(2, 0, 0), 4);
+        robots[3] = new Robot(Material.ORANGE, new Vector(2, 0, 0), 4, random);
 
         // Initialize the camera
         camera = new Camera();
@@ -219,7 +207,7 @@ public class RobotRace extends Base {
         gs.theta = (float) Math.PI / 4f;
         gs.phi = (float) Math.PI / 3f;
 
-        gs.vDist = 21;       
+        gs.vDist = 21;
     }
 
     /**
@@ -254,7 +242,7 @@ public class RobotRace extends Base {
 
         // Update the view according to the camera mode and robot of interest.
         // For camera modes 1 to 4, determine which robot to focus on.
-        camera.update(gs, robots[2]);
+        camera.update(gs, Arrays.asList(robots));
         glu.gluLookAt(camera.eye.x(), camera.eye.y(), camera.eye.z(),
                 camera.center.x(), camera.center.y(), camera.center.z(),
                 camera.up.x(), camera.up.y(), camera.up.z());
@@ -302,42 +290,25 @@ public class RobotRace extends Base {
             drawAxisFrame();
         }
 
-        if (this.lastSceneUpdateTime == 0) {
-            this.positionOnTrack = 0;
-        } else {
-            this.positionOnTrack += (double) (System.currentTimeMillis() - this.lastSceneUpdateTime) * RobotRace.ROBOT_INCREASE_PER_MILLISECOND;
-        }
+        int timeSinceLastSceneUpdate;
 
-        if (positionOnTrack >= 1) {
-            positionOnTrack -= 1;
-        }
-        
-        tAnimSeconds += ((System.currentTimeMillis() - lastSceneUpdateTime)/1000d) * ANIMATION_TIME_MODIFIER;
-        
-        if(tAnimSeconds >= 10) {
-            tAnimSeconds -= 10;
-        }
-        
-               
+        timeSinceLastSceneUpdate = Math.toIntExact(System.currentTimeMillis() - this.lastSceneUpdateTime);
+
         lastSceneUpdateTime = System.currentTimeMillis();
 
-        // Get the position and direction of the first robot.
-        robots[0].position = raceTracks[gs.trackNr].getLanePoint(1, positionOnTrack);
-        robots[1].position = raceTracks[gs.trackNr].getLanePoint(2, positionOnTrack);
-        robots[2].position = raceTracks[gs.trackNr].getLanePoint(3, positionOnTrack);
-        robots[3].position = raceTracks[gs.trackNr].getLanePoint(4, positionOnTrack);
+        for (int i = 1; i <= 4; i++) {
+            Robot rob = robots[i - 1];
 
-        robots[0].direction = raceTracks[gs.trackNr].getLaneTangent(1, positionOnTrack);
-        robots[1].direction = raceTracks[gs.trackNr].getLaneTangent(2, positionOnTrack);
-        robots[2].direction = raceTracks[gs.trackNr].getLaneTangent(3, positionOnTrack);
-        robots[3].direction = raceTracks[gs.trackNr].getLaneTangent(4, positionOnTrack);
-        //robots[0].direction = raceTracks[gs.trackNr].getLaneTangent(0, 0);
-        // Draw all robots.
-        robots[0].draw(gl, glu, glut, gs.showStick, tAnimSeconds * ANIMATION_TIME_CLAMP);
-        robots[1].draw(gl, glu, glut, gs.showStick, tAnimSeconds * ANIMATION_TIME_CLAMP);
-        robots[2].draw(gl, glu, glut, gs.showStick, tAnimSeconds * ANIMATION_TIME_CLAMP);
-        robots[3].draw(gl, glu, glut, gs.showStick, tAnimSeconds * ANIMATION_TIME_CLAMP);
-        
+            rob.calculateNewPosOnTrack(timeSinceLastSceneUpdate);
+            rob.calculateNewAnimValue(timeSinceLastSceneUpdate);
+            rob.determineNewAnimationVariables(timeSinceLastSceneUpdate);
+
+            rob.position = raceTracks[gs.trackNr].getLanePoint(i, rob.getPosOnTrack());
+            rob.direction = raceTracks[gs.trackNr].getLaneTangent(i, rob.getPosOnTrack());
+            rob.draw(gl, glu, glut, gs.showStick, rob.getTAnim() * ANIMATION_TIME_CLAMP);
+
+        }
+
         // Draw the race track.
         raceTracks[gs.trackNr].draw(gl, glu, glut, track, brick);
 

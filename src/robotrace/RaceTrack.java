@@ -79,7 +79,11 @@ public class RaceTrack {
      * the distance between the center point and point on the line. Then this
      * vector is added to the centerPoint vector. Returning a point on the lane. 
      */
-    public Vector getLanePoint(int lane, double t) {
+    public Vector getLanePoint(int lane, double t) {        
+        if (t < 0 || t > 1) {
+            throw new IllegalArgumentException("T has to be >= 0 and <= 1");
+        }
+        
         Vector point = getPoint(t);
         Vector tangent = getTangent(t);
 
@@ -92,7 +96,10 @@ public class RaceTrack {
      * Returns the tangent of a lane at 0 <= t < 1. Use this method to find the
      * orientation of a robot on the track.
      */
-    public Vector getLaneTangent(int lane, double t) {
+    public Vector getLaneTangent(int lane, double t) {        
+        if (t < 0 || t > 1) {
+            throw new IllegalArgumentException("T has to be >= 0 and <= 1");
+        }
         return getTangent(t);
     }
 
@@ -130,9 +137,6 @@ public class RaceTrack {
      * Returns a point on the test track at 0 <= t < 1.
      */
     private Vector getTestPoint(double t) {
-        if (t < 0 || t > 1) {
-            throw new IllegalArgumentException("T has to be >= 0 and <= 1");
-        }
         return new Vector(10 * Math.cos(2 * Math.PI * t), 14 * Math.sin(2 * Math.PI * t), 1);
     }
 
