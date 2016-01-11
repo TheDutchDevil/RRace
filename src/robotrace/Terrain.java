@@ -29,8 +29,6 @@ class Terrain {
         new Color(194, 178, 128, 255), new Color(51, 181, 32, 255)
     };
 
-    private Random random = new Random();
-
     /**
      * Draws the terrain. Sets up 1D texturemapping, then starts with drawing
      * the terrain. The terrain itself is drawn as a collection of triangles,
