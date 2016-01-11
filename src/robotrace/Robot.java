@@ -17,12 +17,27 @@ import jogamp.graph.curve.tess.HEdge;
  */
 class Robot {
 
-    private static final double INITIAL_TRACK_ROUND_STEP = 1d/40000;
-    
+    /**
+     * Default step for traversing the track. Incrementing the position on the
+     * track with this value for each passed ms results in a robot taking 40 s
+     * to complete one lap on the track.
+     */
+    private static final double INITIAL_TRACK_ROUND_STEP = 1d / 40000;
+
+    /**
+     * Speeds the animation up by this constant. With this set to 1 each
+     * animation cycle takes ten seconds.
+     */
     private static final int INITIAL_ANIMATION_MODIFIER = 18;
-    
+
+    /**
+     * The desired ratio between the track step and animation modifier. If the
+     * track step for a robot is increased the animation should also speed up
+     * and vice versa. This constant is used in the calculation of a new
+     * animation modifier when the robot speed is changed.
+     */
     private static final double DESIRED_ANIMATION_RATIO = INITIAL_TRACK_ROUND_STEP / INITIAL_ANIMATION_MODIFIER;
-    
+
     /**
      * Size of the robot in meters, all other constant size values of the robot
      * are based on this value.
@@ -201,6 +216,10 @@ class Robot {
      */
     private final Material material;
 
+    /**
+     * Nr of the robot, 1 for the first robot 4 for the last robot. Used when
+     * texturing the torso to select the right part from the texture strip.
+     */
     private final int robotNr;
 
     /**
@@ -247,19 +266,46 @@ class Robot {
      * shoulder joints. Based on the value of tAnim.
      */
     private double shoulderHeight;
-    
+
+    /**
+     * Current value of the track step variable. initialized to the default, and
+     * gets updated if a new random speed for the robot is selected.
+     */
     private double trackRoundStep = INITIAL_TRACK_ROUND_STEP;
-    
+
+    /**
+     * Current position of the robot on the track, a value from 0 to 1.
+     * Incremented each time the associated update method is called.
+     */
     private double posOnTrack;
-    
-    private double tAnim; 
-    
-    private double tAnimModifier = INITIAL_ANIMATION_MODIFIER; 
-    
+
+    /**
+     * Current value of the tAnim variable for this robot, updated each time the
+     * associated update method is called. Goes from 0 to 1.
+     */
+    private double tAnim;
+
+    /**
+     * Modifier which with the animation is sped up. Initialized to the default
+     * value for the default speed. If the trackStep is updated this value is
+     * also updated, based on the desired ratio.
+     */
+    private double tAnimModifier = INITIAL_ANIMATION_MODIFIER;
+
+    /**
+     * Ms left until the speed of the robot should be updated again.
+     */
     private long msUntilNextRandomValueUpdate;
-    
+
+    /**
+     * Total distance this robot has traveled around the track.
+     */
     private double totalDistanceTravelled;
-    
+
+    /**
+     * Instance to a random object used to determine a random speed and a random
+     * time until the speed should change again.
+     */
     private final Random random;
 
     /**
@@ -270,45 +316,71 @@ class Robot {
         this.position = position;
         this.robotNr = robotNr;
         this.random = random;
-        
+
         msUntilNextRandomValueUpdate = random.nextInt(5000) + 3000;
     }
-    
+
+    /**
+     * Takes the elapsed time, subtracts it from the time until
+     * randomValueUpdate. If the randomValueUpdate variable is lower than zero
+     * the method calculates and new track speed using the random object, a new
+     * tAnimModifier and it randomly selects a new nextRandomValueUpdate value.
+     *
+     */
     public void determineNewAnimationVariables(int msElapsed) {
         msUntilNextRandomValueUpdate -= msElapsed;
-        
-        if(msUntilNextRandomValueUpdate < 0) {
+
+        if (msUntilNextRandomValueUpdate < 0) {
             int trackRoundInMs = 32500 + random.nextInt(15000);
-            trackRoundStep = 1d/trackRoundInMs;
-            tAnimModifier = (1d/trackRoundInMs)/DESIRED_ANIMATION_RATIO;
-            
+            trackRoundStep = 1d / trackRoundInMs;
+            tAnimModifier = (1d / trackRoundInMs) / DESIRED_ANIMATION_RATIO;
+
             msUntilNextRandomValueUpdate = random.nextInt(5000) + 3000;
         }
     }
-    
+
+    /**
+     * Takes the elapsed time and uses it to calculate a new posOnTrack value.
+     */
     public void calculateNewPosOnTrack(int msElapsed) {
         posOnTrack += (trackRoundStep * msElapsed);
         totalDistanceTravelled += (trackRoundStep * msElapsed);
-        while(posOnTrack > 1) {
+        while (posOnTrack > 1) {
             posOnTrack -= 1;
         }
     }
-    
+
+    /**
+     * Takes the elapsed time and uses it to calculate a new tAnim value.
+     */
     public void calculateNewAnimValue(int msElapsed) {
-        tAnim += (msElapsed /1000d) * tAnimModifier;
-        while(tAnim >= 10) {
+        tAnim += (msElapsed / 1000d) * tAnimModifier;
+        while (tAnim >= 10) {
             tAnim -= 10;
         }
     }
-    
+
+    /**
+     * Gets the total distance traveled of the robot since the start of the
+     * application.
+     */
     public double getTotalDistanceTravelled() {
         return totalDistanceTravelled;
     }
-    
+
+    /**
+     * Gets the current value of tAnim. This value can be updated by calling
+     * calculateNewAnimValue.
+     */
     public double getTAnim() {
         return this.tAnim;
     }
-    
+
+    /**
+     * Gets the current position of the robot on the track. Guaranteed to be
+     * between 0 and 1. Can be updated by calling calculateNewPosOnTrack.
+     *
+     */
     public double getPosOnTrack() {
         return this.posOnTrack;
     }
@@ -336,6 +408,8 @@ class Robot {
      * is. 0 is the start, 100 is the end.
      */
     private void calculateAnimValues(double tAnim) {
+        tAnim = tAnim * 10;
+
         if (tAnim <= 25) {
             alpha = 180d - (45d * tAnim) / 25d;
             beta = 135 + 0.075d * Math.pow(tAnim - 25d, 2);
@@ -345,7 +419,7 @@ class Robot {
         } else if (tAnim <= 50) {
             alpha = 135 + 0.075d * Math.pow(tAnim - 25d, 2);
             beta = 135 + (45 / 25d) * (tAnim - 25d);
-            gamma = 45-((45d * (tAnim-25)) / 25d);
+            gamma = 45 - ((45d * (tAnim - 25)) / 25d);
             leftLegIsLeading = false;
             leftLegIsFrontLeg = false;
         } else if (tAnim <= 75) {
@@ -357,7 +431,7 @@ class Robot {
         } else {
             alpha = 135 + (45 / 25d) * (tAnim - 75d);
             beta = 135 + 0.075d * Math.pow(tAnim - 75d, 2);
-            gamma = 45-((45d * (tAnim - 75)) / 25d);
+            gamma = 45 - ((45d * (tAnim - 75)) / 25d);
             leftLegIsLeading = true;
             leftLegIsFrontLeg = true;
         }
@@ -392,7 +466,7 @@ class Robot {
 
         int additonalAngle = direction.y < 0 ? 180 : 0;
 
-        gl.glRotated((-Math.toDegrees(Math.atan(direction.x / direction.y))) + additonalAngle, 0, 0, 1); //TODO
+        gl.glRotated((-Math.toDegrees(Math.atan(direction.x / direction.y))) + additonalAngle, 0, 0, 1);
 
         if (stickFigure) {
             /**
@@ -424,19 +498,19 @@ class Robot {
     }
 
     /**
-     * Draws the entire leg (including the shoe) of the robot. Starts at the hip.
-     * Hip height is dependent on the animation value. After moving the reference
-     * frame to the height of the hip the reference frame is flipped 180 degrees
-     * over the x axis.
-     * 
+     * Draws the entire leg (including the shoe) of the robot. Starts at the
+     * hip. Hip height is dependent on the animation value. After moving the
+     * reference frame to the height of the hip the reference frame is flipped
+     * 180 degrees over the x axis.
+     *
      * Then the reference frame is rotated again based on the animation values
-     * and in which state the animation is. So that the upper leg is drawn
-     * at the correct angle w.r.t. to the torso. 
-     * 
+     * and in which state the animation is. So that the upper leg is drawn at
+     * the correct angle w.r.t. to the torso.
+     *
      * At the knee it again rotates the reference frame based on the animation
-     * values, then it draws the lower leg. 
-     * 
-     * For the shoe and ankle seperate methods are called that draw those items
+     * values, then it draws the lower leg.
+     *
+     * For the shoe and ankle separate methods are called that draw those items
      * in more detail, the lower and upper leg consist out of a cylinder.
      *
      * @param leftLeg Draws the left leg when true, otherwise it draws the right
@@ -557,15 +631,17 @@ class Robot {
      * Draws either the right or left stick leg. First the reference frame is
      * moved to the height of the hips. Based on the height of the hips
      * calculated at the start of the draw function.</p>
-     * 
-     * <p>Then it rotates the reference frame 180 degrees over the y axis. After
+     *
+     * <p>
+     * Then it rotates the reference frame 180 degrees over the y axis. After
      * doing that it rotates the reference frame with the angle between the
-     * upper leg, for this there are several cases based on which leg is leading,
-     * which leg is in front and which leg is being drawn. Then it draws the 
-     * upper leg.</p>
-     * 
-     * <p>At the knee it again rotates the reference with a angle depending on
-     * the animation values and alpha or beta values. after which it rotates the
+     * upper leg, for this there are several cases based on which leg is
+     * leading, which leg is in front and which leg is being drawn. Then it
+     * draws the upper leg.</p>
+     *
+     * <p>
+     * At the knee it again rotates the reference with a angle depending on the
+     * animation values and alpha or beta values. after which it rotates the
      * reference frame again so that the lower leg and foot joint can be
      * correctly drawn based on the animation values. </p>
      *
@@ -879,12 +955,12 @@ class Robot {
      * Moves up to the height of the hips, binds the torso texture, then draws
      * three surfaces. First it draws the outside of the body (a cylinder) for
      * that it uses a parametric definition defined in torsoPoint(u, v).
-     * 
+     *
      * While drawing the outside it also maps the torso texture onto the body.
-     * The torso texture is a strip of four textures, each texture for a different
-     * robot. Based on the robotNumber (1 to 4) 1/4 of the texture is mapped
-     * onto both the front and back of the torso.
-     * 
+     * The torso texture is a strip of four textures, each texture for a
+     * different robot. Based on the robotNumber (1 to 4) 1/4 of the texture is
+     * mapped onto both the front and back of the torso.
+     *
      * After that the top and bottom of the torso are drawn to close the torso.
      */
     private void drawUpperBody(GL2 gl, GLU glu, GLUT glut) {
@@ -915,22 +991,22 @@ class Robot {
 
             gl.glNormal3d(lowerNormal.x, lowerNormal.y, lowerNormal.z);
 
-            gl.glTexCoord2d(((t / 10d) / 4d) + ((robotNr - 1d)/4), 0);
+            gl.glTexCoord2d(((t / 10d) / 4d) + ((robotNr - 1d) / 4), 0);
 
             gl.glVertex3d(lower.x, lower.y, lower.z);
 
             gl.glNormal3d(upperNormal.x, upperNormal.y, upperNormal.z);
 
-            gl.glTexCoord2d(((t / 10d) / 4d) + ((robotNr - 1d)/4), 1);
+            gl.glTexCoord2d(((t / 10d) / 4d) + ((robotNr - 1d) / 4), 1);
 
             gl.glVertex3d(upper.x, upper.y, upper.z);
         }
 
         gl.glEnd();
-        
+
         /**
-         * Bind a neutral texture to prevent the rest of the robot from being 
-         * impacted. 
+         * Bind a neutral texture to prevent the rest of the robot from being
+         * impacted.
          */
         gl.glBindTexture(GL2.GL_TEXTURE_2D, 0);
 
@@ -967,15 +1043,15 @@ class Robot {
     }
 
     /**
-     * Calculates a point on the cylinder surface of the torso of the robot. 
-     * A standard parametric cylinder function is used. However, the radius
-     * of the drawn eclipse is decreased as v increases. This way, the effect
-     * of a body that is wider at the hips is mimicked. 
-     * 
-     * A is the maximum radius on the X axis at V is 0. D is how much A decreases
-     * as V increases. Until at V is 1 the radius of the torso on the X axis 
-     * is LOWER_TORSO_RADIUS. 
-     * 
+     * Calculates a point on the cylinder surface of the torso of the robot. A
+     * standard parametric cylinder function is used. However, the radius of the
+     * drawn eclipse is decreased as v increases. This way, the effect of a body
+     * that is wider at the hips is mimicked.
+     *
+     * A is the maximum radius on the X axis at V is 0. D is how much A
+     * decreases as V increases. Until at V is 1 the radius of the torso on the
+     * X axis is LOWER_TORSO_RADIUS.
+     *
      * @param u A value from 0 to 1
      * @param v A value from 0 to 1
      * @return A point on the torso.
@@ -990,9 +1066,10 @@ class Robot {
 
     /**
      * Derivative of the torsoPoint function w.r.t to the U parameter.
+     *
      * @param u
      * @param v
-     * @return 
+     * @return
      */
     private Vector torsoTangentInUDirection(double u, double v) {
         double a = LOWER_TORSO_RADIUS;
@@ -1003,9 +1080,10 @@ class Robot {
 
     /**
      * Derivative of the torsoPoint function w.r.t. to the V parameter.
+     *
      * @param u
      * @param v
-     * @return 
+     * @return
      */
     private Vector torsoTangentInVDirection(double u, double v) {
         double a = LOWER_TORSO_RADIUS;
@@ -1152,9 +1230,9 @@ class Robot {
 
     /**
      *
-     * Draws the head and neck of the robot. The head consists out of three
-     * cubes, two forming the head shape and one red cube representing the
-     * mouth. The head also consists out of two ears and two eyes.
+     * Draws the head and neck of the robot. The head is drawn as one cube,
+     * manually drawn, textured with a leopard print. The head also consists out
+     * of two ears and two eyes.
      *
      * The neck is drawn as a cylinder starting from the shoulders. The first
      * part of the head that's drawn is the back part, which spawns the entire
@@ -1170,127 +1248,85 @@ class Robot {
         glut.glutSolidCylinder(ROBOT_LIMB_RADIUS, NECK_LENGTH, 16, 16);
 
         gl.glTranslated(0, 0, .15 * SIZE);
-        
+
         gl.glColor3f(1, 1, 1);
-        
+
         RobotRace.head.bind(gl);
-        
+
         gl.glBegin(GL2.GL_QUADS);
-        
-        gl.glNormal3d(0,1,0);
-        
-        gl.glTexCoord2d(1,1);
-        gl.glVertex3d(-.1*SIZE, .1*SIZE, .1*SIZE);
-        gl.glTexCoord2d(0,1);
-        gl.glVertex3d(.1*SIZE, .1*SIZE, .1*SIZE);
-        gl.glTexCoord2d(0,0);
-        gl.glVertex3d(.1*SIZE, .1*SIZE, -.1*SIZE);
-        gl.glTexCoord2d(1,0);
-        gl.glVertex3d(-.1*SIZE, .1*SIZE, -.1*SIZE);
-        
-        gl.glNormal3d(1,0,0);
-        
-        gl.glTexCoord2d(1,1);
-        gl.glVertex3d(.1*SIZE, .1*SIZE, .1*SIZE);
-        gl.glTexCoord2d(0,1);
-        gl.glVertex3d(.1*SIZE, -.1*SIZE, .1*SIZE);
-        gl.glTexCoord2d(0,0);
-        gl.glVertex3d(.1*SIZE, -.1*SIZE, -.1*SIZE);
-        gl.glTexCoord2d(1,0);
-        gl.glVertex3d(.1*SIZE, .1*SIZE, -.1*SIZE);
-        
-        gl.glNormal3d(0,-1,0);
-        
-        gl.glTexCoord2d(1,1);
-        gl.glVertex3d(-.1*SIZE, -.1*SIZE, .1*SIZE);
-        gl.glTexCoord2d(0,1);
-        gl.glVertex3d(.1*SIZE, -.1*SIZE, .1*SIZE);
-        gl.glTexCoord2d(0,0);
-        gl.glVertex3d(.1*SIZE, -.1*SIZE, -.1*SIZE);
-        gl.glTexCoord2d(1,0);
-        gl.glVertex3d(-.1*SIZE, -.1*SIZE, -.1*SIZE);
-        
-        gl.glNormal3d(-1,0,0);
-        
-        gl.glTexCoord2d(1,1);
-         gl.glVertex3d(-.1*SIZE, .1*SIZE, .1*SIZE);
-         gl.glTexCoord2d(0,1);
-        gl.glVertex3d(-.1*SIZE, -.1*SIZE, .1*SIZE);
-        gl.glTexCoord2d(0,0);
-        gl.glVertex3d(-.1*SIZE, -.1*SIZE, -.1*SIZE);
-        gl.glTexCoord2d(1,0);
-        gl.glVertex3d(-.1*SIZE, .1*SIZE, -.1*SIZE);
-        
-        gl.glNormal3d(0,0,1);
-        
-        gl.glTexCoord2d(1,1);
-        gl.glVertex3d(-.1*SIZE, .1*SIZE, .1*SIZE);
-        gl.glTexCoord2d(0,1);
-        gl.glVertex3d(-.1*SIZE, -.1*SIZE, .1*SIZE);
-        gl.glTexCoord2d(0,0);
-        gl.glVertex3d(.1*SIZE, -.1*SIZE, .1*SIZE);
-        gl.glTexCoord2d(1,0);
-        gl.glVertex3d(.1*SIZE, .1*SIZE, .1*SIZE);
-        
-        gl.glNormal3d(0,0,-1);
-        
-        gl.glTexCoord2d(1,1);
-        gl.glVertex3d(-.1*SIZE, .1*SIZE, -.1*SIZE);
-        gl.glTexCoord2d(0,1);
-        gl.glVertex3d(-.1*SIZE, -.1*SIZE, -.1*SIZE);
-        gl.glTexCoord2d(0,0);
-        gl.glVertex3d(.1*SIZE, -.1*SIZE, -.1*SIZE);
-        gl.glTexCoord2d(1,0);
-        gl.glVertex3d(.1*SIZE, .1*SIZE, -.1*SIZE);
-        
+
+        gl.glNormal3d(0, 1, 0);
+
+        gl.glTexCoord2d(1, 1);
+        gl.glVertex3d(-.1 * SIZE, .1 * SIZE, .1 * SIZE);
+        gl.glTexCoord2d(0, 1);
+        gl.glVertex3d(.1 * SIZE, .1 * SIZE, .1 * SIZE);
+        gl.glTexCoord2d(0, 0);
+        gl.glVertex3d(.1 * SIZE, .1 * SIZE, -.1 * SIZE);
+        gl.glTexCoord2d(1, 0);
+        gl.glVertex3d(-.1 * SIZE, .1 * SIZE, -.1 * SIZE);
+
+        gl.glNormal3d(1, 0, 0);
+
+        gl.glTexCoord2d(1, 1);
+        gl.glVertex3d(.1 * SIZE, .1 * SIZE, .1 * SIZE);
+        gl.glTexCoord2d(0, 1);
+        gl.glVertex3d(.1 * SIZE, -.1 * SIZE, .1 * SIZE);
+        gl.glTexCoord2d(0, 0);
+        gl.glVertex3d(.1 * SIZE, -.1 * SIZE, -.1 * SIZE);
+        gl.glTexCoord2d(1, 0);
+        gl.glVertex3d(.1 * SIZE, .1 * SIZE, -.1 * SIZE);
+
+        gl.glNormal3d(0, -1, 0);
+
+        gl.glTexCoord2d(1, 1);
+        gl.glVertex3d(-.1 * SIZE, -.1 * SIZE, .1 * SIZE);
+        gl.glTexCoord2d(0, 1);
+        gl.glVertex3d(.1 * SIZE, -.1 * SIZE, .1 * SIZE);
+        gl.glTexCoord2d(0, 0);
+        gl.glVertex3d(.1 * SIZE, -.1 * SIZE, -.1 * SIZE);
+        gl.glTexCoord2d(1, 0);
+        gl.glVertex3d(-.1 * SIZE, -.1 * SIZE, -.1 * SIZE);
+
+        gl.glNormal3d(-1, 0, 0);
+
+        gl.glTexCoord2d(1, 1);
+        gl.glVertex3d(-.1 * SIZE, .1 * SIZE, .1 * SIZE);
+        gl.glTexCoord2d(0, 1);
+        gl.glVertex3d(-.1 * SIZE, -.1 * SIZE, .1 * SIZE);
+        gl.glTexCoord2d(0, 0);
+        gl.glVertex3d(-.1 * SIZE, -.1 * SIZE, -.1 * SIZE);
+        gl.glTexCoord2d(1, 0);
+        gl.glVertex3d(-.1 * SIZE, .1 * SIZE, -.1 * SIZE);
+
+        gl.glNormal3d(0, 0, 1);
+
+        gl.glTexCoord2d(1, 1);
+        gl.glVertex3d(-.1 * SIZE, .1 * SIZE, .1 * SIZE);
+        gl.glTexCoord2d(0, 1);
+        gl.glVertex3d(-.1 * SIZE, -.1 * SIZE, .1 * SIZE);
+        gl.glTexCoord2d(0, 0);
+        gl.glVertex3d(.1 * SIZE, -.1 * SIZE, .1 * SIZE);
+        gl.glTexCoord2d(1, 0);
+        gl.glVertex3d(.1 * SIZE, .1 * SIZE, .1 * SIZE);
+
+        gl.glNormal3d(0, 0, -1);
+
+        gl.glTexCoord2d(1, 1);
+        gl.glVertex3d(-.1 * SIZE, .1 * SIZE, -.1 * SIZE);
+        gl.glTexCoord2d(0, 1);
+        gl.glVertex3d(-.1 * SIZE, -.1 * SIZE, -.1 * SIZE);
+        gl.glTexCoord2d(0, 0);
+        gl.glVertex3d(.1 * SIZE, -.1 * SIZE, -.1 * SIZE);
+        gl.glTexCoord2d(1, 0);
+        gl.glVertex3d(.1 * SIZE, .1 * SIZE, -.1 * SIZE);
+
         gl.glEnd();
-        
+
         gl.glBindTexture(GL2.GL_TEXTURE_2D, 0);
 
         gl.glColor3fv(ROBOT_HEAD_COLOR, 0);
-
-        /**
-         * Pushes a new matrix, moves to the center of the back part of the head
-         * and draws it. Afterwards pop the matrix so that the position is
-         * returned to the center of the head.
-         *
         
-        gl.glPushMatrix();
-        {
-            gl.glTranslated(0, -.025 * SIZE, 0);
-            gl.glScaled(2, 1.5, 2);
-
-            glut.glutSolidCube((float) (.1 * SIZE));
-        }
-        gl.glPopMatrix();
-
-        /**
-         * Draws the upper frontal part of the head. Clears the matrix stack
-         * after finishing to move the everything back to the center of the
-         * head.
-         *
-        gl.glPushMatrix();
-        {
-            gl.glTranslated(0, .075 * SIZE, 0.025 * SIZE);
-            gl.glScaled(4, 1, 3);
-            glut.glutSolidCube((float) (.05 * SIZE));
-        }
-        gl.glPopMatrix();
-
-        /**
-         * Draws the mouth (lower frontal part) of the head. Changes the color
-         * to a shade of red.
-         *
-        gl.glPushMatrix();
-        {
-            gl.glTranslated(0, .075 * SIZE, -.075 * SIZE);
-            gl.glColor3ub((byte) 230, (byte) 46, (byte) 0);
-            gl.glScaled(4, 1, 1);
-            glut.glutSolidCube((float) (.05 * SIZE));
-        }
-        gl.glPopMatrix();
-        * */
-
         drawEar(gl, glu, glut, true);
         drawEar(gl, glu, glut, false);
 

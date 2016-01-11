@@ -126,8 +126,10 @@ class Camera {
 
     /**
      * Computes eye, center, and up, based on the motorcycle mode. The camera
-     * should focus on the robot. Takes a position perpendicular to the focused
-     * robot and focuses on the torso of the robot.
+     * should focus on the robot. First it takes the robot that has traveled
+     * the most. Then it calculates a vector perpendicular to the robot's 
+     * tangent and then scales that vector so that the camera is perpendicular
+     * to the furthest robot at a constant distance from the track.
      */
     private void setMotorCycleMode(GlobalState gs, List<Robot> focus) {
         
@@ -138,8 +140,6 @@ class Camera {
                 mostTravelled = rob;
             }
         }
-        
-        mostTravelled = focus.get(0);
 
         Vector perpToRobot = mostTravelled.direction.cross(Vector.Z).normalized();
 
@@ -153,7 +153,8 @@ class Camera {
     /**
      * Computes eye, center, and up, based on the first person mode. The camera
      * should view from the perspective of the robot. Takes a position slightly
-     * in front of the focus robot.
+     * in front of the focus robot. Focus robot is found by selecting the robot
+     * that has traveled the least far.
      */
     private void setFirstPersonMode(GlobalState gs, List<Robot> focus) {
         Robot leastTravelled = null;

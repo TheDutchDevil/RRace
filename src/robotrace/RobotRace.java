@@ -1,9 +1,11 @@
 package robotrace;
 
+import com.jogamp.opengl.util.gl2.GLUT;
 import java.nio.FloatBuffer;
 import java.util.Arrays;
 import java.util.Random;
 import javax.media.opengl.GL;
+import javax.media.opengl.GL2;
 import static javax.media.opengl.GL2.*;
 import static javax.media.opengl.fixedfunc.GLLightingFunc.GL_AMBIENT;
 import static javax.media.opengl.fixedfunc.GLLightingFunc.GL_DIFFUSE;
@@ -44,12 +46,6 @@ import static javax.media.opengl.fixedfunc.GLLightingFunc.GL_SPECULAR;
 public class RobotRace extends Base {
 
     /**
-     * Ensures that the animation value, which runs from 0 to 10 is modified so
-     * that it runs from 0 to 100.
-     */
-    private static final double ANIMATION_TIME_CLAMP = 10;
-
-    /**
      * Last time in milliseconds that the scene got updated, this time is used
      * to calculate the time that passed between scene updates so that the
      * animation and robot progress along the track can be calculated.
@@ -57,7 +53,8 @@ public class RobotRace extends Base {
     private long lastSceneUpdateTime = System.currentTimeMillis();
 
     /**
-     *
+     * Random instance shared by the four different robots, used by the robots
+     * to calculate random speed changes.
      */
     private final Random random;
 
@@ -113,7 +110,14 @@ public class RobotRace extends Base {
         // Test track
         raceTracks[0] = new RaceTrack();
 
-        // O-track
+        /**
+         * Control points were picked by mimicking an O in the spline tool. 
+         * Divide the x and y coordinates of the controlpoints by 3 to find
+         * the location of the control points on the grid of the spline application.
+         * 
+         * For the L track divide by 4, for the C track divide by 4 and for the
+         * 8 track divide by 8.
+         */
         raceTracks[1] = new RaceTrack(new Vector[]{
             new Vector(0, -15, 1),
             new Vector(12, -15, 1), new Vector(12, 15d, 1), new Vector(0, 15, 1),
@@ -290,10 +294,13 @@ public class RobotRace extends Base {
             drawAxisFrame();
         }
 
+        /**
+         * Used to calculate the time in ms between each draw cycle. 
+         * timeSinceLastSceneUpdate is used in the Robot class to update the
+         * animation and tracklocation variables.
+         */
         int timeSinceLastSceneUpdate;
-
         timeSinceLastSceneUpdate = Math.toIntExact(System.currentTimeMillis() - this.lastSceneUpdateTime);
-
         lastSceneUpdateTime = System.currentTimeMillis();
 
         for (int i = 1; i <= 4; i++) {
@@ -305,7 +312,7 @@ public class RobotRace extends Base {
 
             rob.position = raceTracks[gs.trackNr].getLanePoint(i, rob.getPosOnTrack());
             rob.direction = raceTracks[gs.trackNr].getLaneTangent(i, rob.getPosOnTrack());
-            rob.draw(gl, glu, glut, gs.showStick, rob.getTAnim() * ANIMATION_TIME_CLAMP);
+            rob.draw(gl, glu, glut, gs.showStick, rob.getTAnim());
 
         }
 
