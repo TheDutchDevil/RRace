@@ -4,6 +4,7 @@ import com.jogamp.opengl.util.gl2.GLUT;
 import java.awt.Color;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Random;
 import javax.media.opengl.GL2;
 import javax.media.opengl.glu.GLU;
 
@@ -28,6 +29,10 @@ class Terrain {
         new Color(44, 170, 211, 255), new Color(44, 170, 211, 255),
         new Color(194, 178, 128, 255), new Color(51, 181, 32, 255)
     };
+    
+    private Random random = new Random();
+    
+    
 
     /**
      * Draws the terrain. Sets up 1D texturemapping, then starts with drawing the
@@ -105,6 +110,14 @@ class Terrain {
         gl.glDisable(GL2.GL_TEXTURE_1D);
         gl.glEnable(GL2.GL_TEXTURE_2D);
 
+        
+        drawPinetree(gl, glu, glut, -15.3, -18, heightAt(-15.3, -18), 0.8);
+        drawPinetree(gl, glu, glut, -18, 1, heightAt(-18, 1), 1.0);
+        drawPinetree(gl, glu, glut, 16, -17, heightAt(16, -17), 1.5);
+        drawRoundTree(gl, glu, glut, 16, 4, heightAt(16, 4), 0.5);
+        drawRoundTree(gl, glu, glut, 15.1, 16, heightAt(15.1, 16), 1.3);
+        drawRoundTree(gl, glu, glut, -16, 18, heightAt(-16, 18), 0.9);
+        
         drawTransparentPolygon(gl, glu, glut);
     }
 
@@ -247,6 +260,68 @@ class Terrain {
         gl.glTexParameteri(GL2.GL_TEXTURE_1D, GL2.GL_TEXTURE_MIN_FILTER, GL2.GL_LINEAR);
         gl.glTexParameteri(GL2.GL_TEXTURE_1D, GL2.GL_TEXTURE_MAG_FILTER, GL2.GL_LINEAR);
         return texid[0];
+    }
+    /**
+     * this methode draws a tree. It first draws a tree base This is drawn in
+     * Brown after that it draws a cone on top of the base. At 6/7 of the cone
+     * a new cone is drawn. 
+     * @param treeBaseHeight this is a fixed number between 0.5 and 1.5 
+     * @param xPosition this is the x-coordinate of the tree
+     * @param yPosition this is the y-coordinate of the tree
+     * @param zPosition this is the z-coordinat of the tree, 
+     * It is equal of the height of the train at the position of the tree.
+     */
+    
+     private void drawPinetree(GL2 gl, GLU glu, GLUT glut, double xPosition, double yPosition, double zPosition, double treeBaseHeight) {
+        double treeBaseRadius = 0.2*treeBaseHeight;
+        double treeLowerLeavesRadius = 3.0*treeBaseRadius;
+        double treeUpperLeavesRadius = 2.0*treeBaseRadius;
+        double treeLowerLeaveHeight = 0.7*treeBaseHeight;
+        double treeUpperLeaveHeight = 0.4*treeBaseHeight;
+        gl.glPushMatrix();
+
+        gl.glTranslated(xPosition, yPosition, zPosition);
+
+        gl.glColor3f(112f/255f, 3f/255f, 3f/255f);
+
+        glut.glutSolidCylinder(treeBaseRadius, treeBaseHeight, 16, 16);
+
+        gl.glTranslated(0, 0, treeBaseHeight);
+
+        gl.glColor3f(0f/255f, 153f/255f, 0f/255f);
+        
+        glut.glutSolidCone(treeLowerLeavesRadius, treeLowerLeaveHeight, 16, 16);
+        
+        gl.glTranslated(0, 0, 0.6*treeBaseHeight);
+        
+        glut.glutSolidCone(treeUpperLeavesRadius, treeUpperLeaveHeight, 16, 16);
+
+        gl.glPopMatrix();
+    }
+     
+     private void drawRoundTree(GL2 gl, GLU glu, GLUT glut, double xPosition, double yPosition, double zPosition, double treeBaseHeight) {
+        double treeBaseRadius = 0.2*treeBaseHeight;
+        double treeLowerLeavesRadius = 3.0*treeBaseRadius;
+        double treeUpperLeavesRadius = 2.0*treeBaseRadius;
+        gl.glPushMatrix();
+
+        gl.glTranslated(xPosition, yPosition, zPosition);
+
+        gl.glColor3f(112f/255f, 3f/255f, 3f/255f);
+
+        glut.glutSolidCylinder(treeBaseRadius, treeBaseHeight, 16, 16);
+
+        gl.glTranslated(0, 0, treeBaseHeight+0.7*treeLowerLeavesRadius);
+
+        gl.glColor3f(0f/255f, 153f/255f, 0f/255f);
+        
+        glut.glutSolidSphere(treeLowerLeavesRadius, 16, 16);
+        
+        gl.glTranslated(0, 0, 1.5*treeLowerLeavesRadius);
+        
+        glut.glutSolidSphere(treeUpperLeavesRadius, 16, 16);
+
+        gl.glPopMatrix();
     }
 
 }
